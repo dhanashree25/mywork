@@ -37,6 +37,7 @@ def json_decoder_generator(contents):
             contents = contents[trial + 1:]
             pos = 0
             yield {
+		"ta": out["payload"].get("data", {}).get("TA"),
                 "action": out.get("action"),
                 "client_ip": out.get("clientIp"),
                 "action": float(out["payload"]["action"]),
@@ -85,8 +86,8 @@ if __name__ == "__main__":
         config["access_secret_key"])
 
     # Read S3 bucket files
-    readRdd = sc.sparkContext.textFile("testdata/test.json")
-    #readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/05/01/*")
+    #readRdd = sc.sparkContext.textFile("testdata/test.json")
+    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/05/01/*")
 
     # Decode Json files
     jsonRdd = readRdd.flatMap(json_decoder_generator)  # repartition(100)
