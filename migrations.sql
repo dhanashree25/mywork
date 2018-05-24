@@ -7,7 +7,7 @@ progress int,
 realm varchar(20),
 started_at timestamp,
 ta varchar(10),
-town varchar(25),
+town varchar(100),
 ts timestamp,
 video_id int,
 action int);
