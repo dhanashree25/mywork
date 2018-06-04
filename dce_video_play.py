@@ -6,6 +6,7 @@ import datetime
 import json
 from io import BytesIO
 
+from pyspark import SparkContext
 from pyspark.streaming import StreamingContext
 from pyspark.sql import Row, SparkSession
 import pyspark.sql.functions as func
@@ -26,15 +27,21 @@ if __name__ == "__main__":
     import time
     start_time = time.time()
     # Initialize a SparkContext with a name
-    sc = SparkSession.builder.appName("ReadRedshiftData").getOrCreate()
+    #sc = SparkSession.builder.appName("ReadRedshiftData").getOrCreate()
+    sc = SparkContext(appName="ReadRedshiftData")
     # Initialize SQL context
     sqlc = SQLContext(sc)
-    # get_config
-    config_file = sc.sparkContext.textFile('s3n://test-dce-spark/config.txt')
+
+   # get_config
+    config_file = sc.textFile('s3n://test-dce-spark/config.txt')
     config = config_file.map(lambda x: (
         x.split(",")[0],
         x.split(",")[1])).collectAsMap()
-
+    postgres_properties = {
+        "user": config["postgres_user"],
+        "password": config["postgres_password"],
+        "driver": config["postgres_driver"]
+    }
     # bucket details
     bucket_name = 's3n://temp-redshift-events'
     sc._jsc.hadoopConfiguration().set(
@@ -44,15 +51,28 @@ if __name__ == "__main__":
         "fs.s3n.awsSecretAccessKey",
         config["neulion_access_secret_key"])
 
-    # Read data from Redshift table
+    # Read data from table
     eventsdf = sqlc.read \
         .format("com.databricks.spark.redshift") \
-        .option("url", "jdbc:redshift://qa-redshift-cluster.camxxuuvbchc.eu-west-1.redshift.amazonaws.com:5439/redshift?user=saffron&password=1Nn0v8t3") \
-        .option("dbtable", "actions") \
+        .option("url", "jdbc:redshift://172.21.105.71:5439/redshift?user=saffron&password=1Nn0v8t3") \
+        .option("query", """select * from actions where realm like'%fivb' and action=2""") \
         .option("tempdir", bucket_name) \
         .option('forward_spark_s3_credentials', True) \
         .load()
+    eventsdf.printSchema()
+    eventsdf = eventsdf.withColumn('started_at',
+                                   func.to_timestamp('started_at', 'MM-dd-yyyy hh:mm:ss').cast("timestamp"))
+    # Calculate video plays
+    videodf = eventsdf.groupBy(
+        "session_id", "customer_id", "realm", "video_id", "started_at", "town", "country").agg(func.max('progress').alias('duration'), func.max('ts').alias('end_time'), func.min('ts').alias('start_time'))
 
-    eventsdf.show()
+    videodf.printSchema()
+
+    # Write to database
+    videodf.write.jdbc(
+        url=config['postgres_url'],
+        table='dce_video_plays',
+        mode='append',
+        properties=postgres_properties)
 
     print ("time- %s " % (time.time() - start_time))

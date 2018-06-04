@@ -11,3 +11,17 @@ town varchar(100),
 ts timestamp,
 video_id int,
 action int);
+
+create table dce_video_plays(
+session_id varchar(50),
+customer_id varchar(25),
+video_id integer,
+duration integer,
+started_at timestamp,
+start_time timestamp,
+end_time timestamp,
+country varchar(25),
+town varchar(100),
+realm varchar(25), 
+latitude float, 
+longitude float);
