@@ -81,7 +81,7 @@ if __name__ == "__main__":
 
     # Read S3 bucket files
     #readRdd = sc.sparkContext.textFile("testdata/test.json")
-    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/05/01/15/*")
+    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/05/*/*/*")
 
     # Decode Json files
     jsonRdd = readRdd.flatMap(json_decoder_generator)  # repartition(100)
@@ -99,17 +99,15 @@ if __name__ == "__main__":
     # Write data to Redshift
     postgres_properties = {
         "user": "saffron",
-        "password": "1nn0v8t3",
-        "driver": "org.postgresql.Driver"
+        "password": "1Nn0v8t3",
+        "driver": "com.amazon.redshift.jdbc.Driver"
     }
     try:
         signupDf.write.jdbc(
-#                 url="jdbc:redshift://172.21.105.71:5439/redshift?user=saffron&password=1Nn0v8t3",
-#                 table="signups",
-                url = config["postgres_url"],
-                table='signups',
-                mode="overwrite",
-                properties=postgres_properties)
+                 url="jdbc:postgresql://172.21.105.71:5439/redshift",
+                 table="signups",
+                 mode="append",
+                 properties=postgres_properties)
     except Exception, e:
         print e
     print ("time- %s " % (time.time() - start_time))

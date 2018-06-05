@@ -25,3 +25,5 @@ town varchar(100),
 realm varchar(25), 
 latitude float, 
 longitude float);
+
+create table signups(customer_id varchar(20), realm varchar(50), town varchar(50), country varchar(50) , ts timestamp ,device varchar(20)) COMPOUND SORTKEY(ts, realm, device, country);
