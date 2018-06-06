@@ -27,3 +27,12 @@ latitude float,
 longitude float);
 
 create table signups(customer_id varchar(20), realm varchar(50), town varchar(50), country varchar(50) , ts timestamp ,device varchar(20)) COMPOUND SORTKEY(ts, realm, device, country);
+
+create table user_logins(customer_id varchar(25),
+			realm varchar(50),
+			town varchar(100),
+			country varchar(100),
+			client_ip varchar(50),
+			ta varchar(50),
+			ts timestamp)
+			COMPOUND SORTKEY(ts, realm, ta, country);

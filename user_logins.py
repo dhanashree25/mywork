@@ -1,6 +1,6 @@
 # =====================================================================================================================
-# Spark Job to read event messages from dice bucket, filter signups and 
-# insert them into redshift signups table.
+# Spark Job to read event messages from dice bucket, filter signins and 
+# insert them into redshift user_logins table.
 # Version-1.0
 # =====================================================================================================================
 import datetime
@@ -12,16 +12,6 @@ from pyspark.sql import Row, SparkSession
 import pyspark.sql.functions as func
 from pyspark.sql import SQLContext
 from pyspark.sql.types import *
-
-
-def getSparkSessionInstance(sparkConf):
-    if ('sparkSessionSingletonInstance' not in globals()):
-        globals()['sparkSessionSingletonInstance'] = SparkSession\
-            .builder\
-            .config(conf=sparkConf)\
-            .getOrCreate()
-    return globals()['sparkSessionSingletonInstance']
-
 
 def json_decoder_generator(contents):
     pos = 0
@@ -37,14 +27,15 @@ def json_decoder_generator(contents):
         else:
             contents = contents[trial + 1:]
             pos = 0
-            if out["payload"].get("data", {}).get("TA")!= "REGISTER_USER":
+            if out["payload"]["action"]!=6: # 6 for Logins
                 continue
             yield {
+                "ta": out["payload"].get("data", {}).get("TA"),
                 "realm": out["realm"],
                 "customer_id": out.get("customerId"),
                 "country": out.get("country"),
                 "town": out.get("town"),
-                "device": out["payload"].get("data", {}).get("device"),
+                "client_ip": out.get("clientIp"),
                 "ts": datetime.datetime.strptime(out["ts"], "%Y-%m-%d %H:%M:%S")
                 }
 
@@ -53,7 +44,7 @@ if __name__ == "__main__":
     import time
     start_time = time.time()
     # Initialize a SparkContext with a name
-    sc = SparkSession.builder.appName("ReadSignups").getOrCreate()
+    sc = SparkSession.builder.appName("ReadLogins").getOrCreate()
     # Initialize SQL context
     sqlc = SQLContext(sc)
     # get_config
@@ -81,7 +72,7 @@ if __name__ == "__main__":
 
     # Read S3 bucket files
     #readRdd = sc.sparkContext.textFile("testdata/test.json")
-    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/04/12/*/*")
+    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/04/08/00/*")
 
     # Decode Json files
     jsonRdd = readRdd.flatMap(json_decoder_generator)  # repartition(100)
@@ -91,7 +82,8 @@ if __name__ == "__main__":
                          StructField("town", StringType()),
                          StructField("country", StringType()),
                          StructField("ts", TimestampType()),
-                         StructField("device", StringType()),
+                         StructField("client_ip", StringType()),
+                         StructField("ta", StringType()),
                          ])
     signupDf = sqlc.createDataFrame(data=jsonRdd, schema=schema)
 
@@ -104,7 +96,7 @@ if __name__ == "__main__":
     try:
         signupDf.write.jdbc(
                  url="jdbc:postgresql://172.21.105.71:5439/redshift",
-                 table="signups",
+                 table="user_logins",
                  mode="append",
                  properties=postgres_properties)
     except Exception, e:
