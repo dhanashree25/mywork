@@ -12,7 +12,7 @@ ts timestamp,
 video_id int,
 action int);
 
-create table dce_video_plays(
+create table video_plays(
 session_id varchar(50),
 customer_id varchar(25),
 video_id integer,
@@ -20,11 +20,10 @@ duration integer,
 started_at timestamp,
 start_time timestamp,
 end_time timestamp,
-country varchar(25),
+country varchar(100),
 town varchar(100),
-realm varchar(25), 
-latitude float, 
-longitude float);
+realm varchar(25))
+COMPOUND SORTKEY(realm, video_id, start_time, end_time,customer_id, country);
 
 create table signups(customer_id varchar(20), realm varchar(50), town varchar(50), country varchar(50) , ts timestamp ,device varchar(20)) COMPOUND SORTKEY(ts, realm, device, country);
 
