@@ -85,7 +85,7 @@ if __name__ == "__main__":
 
     # Read S3 bucket files
     #readRdd = sc.sparkContext.textFile("testdata/test.json")
-    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/04/12/07/*")
+    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/04/*/*/*")
 
     # Decode Json files
     jsonRdd = readRdd.flatMap(json_decoder_generator)  # repartition(100)
@@ -102,7 +102,7 @@ if __name__ == "__main__":
                          ])
     eventsDf = sqlc.createDataFrame(data=jsonRdd, schema=schema)
     list_of_session_ids= tuple(set(jsonRdd.map(lambda i: str(i["session_id"])).collect()))
-   # print list_of_session_ids
+
     query = """select * from video_plays where session_id in {}""".format(list_of_session_ids)
 
     historydf = sqlc.read \
@@ -139,4 +139,17 @@ if __name__ == "__main__":
                  properties=postgres_properties)
     except Exception, e:
         print e
+        
+    #video duration rollup
+    playdf = sqlc.read \
+        .format("com.databricks.spark.redshift") \
+        .option("url", "jdbc:redshift://172.21.105.71:5439/redshift?user=saffron&password=1Nn0v8t3") \
+        .option("table", "video_plays") \
+        .option("tempdir", bucket_name) \
+        .option('forward_spark_s3_credentials', True) \
+        .load()
+        
+    playdf.groupBy(
+        "session_id", "customer_id", "realm", "video_id", "started_at", "town", "country").agg(func.max('progress').alias('duration'), func.max('ts').alias('end_time'), func.min('ts').alias('start_time'))
+    
     print ("time- %s " % (time.time() - start_time))
