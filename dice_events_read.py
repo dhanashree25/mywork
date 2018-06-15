@@ -87,7 +87,7 @@ if __name__ == "__main__":
 
     # Read S3 bucket files
     #readRdd = sc.sparkContext.textFile("testdata/test.json")
-    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/05/01/*")
+    readRdd = sc.sparkContext.textFile("s3n://dce-tracking/prod/2018/04/*/*/*")
 
     # Decode Json files
     jsonRdd = readRdd.flatMap(json_decoder_generator)  # repartition(100)

@@ -5,3 +5,6 @@ postgres_driver,org.postgresql.Driver
 tablename_events,dce_events
 access_key_id,AKIAJVXR75TBLKUQ5P6Q
 access_secret_key,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
+neulion_access_key_id,AKIAJVXOJOB7BQZ6GJGA
+neulion_access_secret_key,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
+redshift_url,blah
