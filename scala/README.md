@@ -79,7 +79,7 @@
 
     spark-submit \
         --class=Main \
-        --master=local \
+        --master="local[*]" \
         --deploy-mode=client \
         --conf="spark.hadoop.fs.s3a.access.key=${AWS_ACCESS_KEY_ID}" \
         --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_KEY}" \
