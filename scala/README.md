@@ -1,11 +1,48 @@
 # Read me
 
+
 ## Dependencies
 
 - Scala 1.11
-- SBT 1.1.
+- SBT 1.1
 - Java 8
 - Spark 2.3
+
+
+## Java
+
+    brew tap caskroom/versions
+    brew cask install java8
+
+
+## JEnv
+
+    brew install jenv
+
+### Bash
+
+	echo 'export PATH="$HOME/.jenv/bin:$PATH"' >> ~/.bash_profile
+	echo 'eval "$(jenv init -)"' >> ~/.bash_profile
+
+### ZSH
+
+	echo 'export PATH="$HOME/.jenv/bin:$PATH"' >> ~/.zshrc
+	echo 'eval "$(jenv init -)"' >> ~/.zshrc
+
+### Adding Java Versions
+
+    jenv add /Library/Java/JavaVirtualMachines/jdk-9.0.1.jdk/Contents/Home/
+    jenv add /Library/Java/JavaVirtualMachines/jdk1.8.0_172.jdk/Contents/Home/
+
+
+## SBT
+
+    brew install sbt
+
+
+## Spark
+
+    brew install apache-spark
 
 
 ## Packaging JAR file
