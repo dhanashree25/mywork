@@ -67,9 +67,13 @@
 
     "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/sbin/stop-all.sh"
 
-## Running
 
-### Client with local spark
+
+
+## Spark Submit / Running
+
+### Local
+
 
     export SCALA_VERSION="2.11"
     export HADOOP_VERSION="2.7.6"
@@ -87,7 +91,7 @@
         --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION}" \
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar"
 
-### Client with Stand Alone
+### Master
 
     spark-submit \
         --class=Main \
@@ -100,8 +104,8 @@
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar"
 
 
-### Spark Shell
 
+## Spark Shell / REPL
 
     spark-shell \
         --master=spark://127.0.0.1:7077 \
