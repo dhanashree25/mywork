@@ -56,14 +56,16 @@
     export SPARK_VERSION="2.3.1"
     export SPARK_MASTER_HOST="127.0.0.1"
 
-    brew install spark
+### Starting
 
     mkdir "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/logs"
     mkdir "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/work"
 
     "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/sbin/start-all.sh"
 
+### Stopping
 
+    "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/sbin/stop-all.sh"
 
 ## Running
 
