@@ -12,8 +12,8 @@ libraryDependencies += "org.apache.spark" %% "spark-core" % "2.3.1"
 libraryDependencies += "org.apache.spark" %% "spark-sql" % "2.3.1"
 libraryDependencies += "org.apache.spark" %% "spark-streaming" % "2.3.1"
 
-// SBT
+// ScalaTest
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 
-// RedShift (with AWS SDK we need 1.7.4 for Hadoop-aws)
+// RedShift (includes AWS SDK - we use this as we need AWS SDK 1.7.4 for Hadoop-AWS)
 libraryDependencies += "com.amazon.redshift" % "redshift-jdbc42" % "1.2.15.1025"
