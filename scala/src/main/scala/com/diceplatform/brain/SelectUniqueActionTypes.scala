@@ -9,5 +9,4 @@ object SelectUniqueActionTypes {
       select(col("payload.action"), col("payload.data.ta")).
       distinct()
   }
-
 }
