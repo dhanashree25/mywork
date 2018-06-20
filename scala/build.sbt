@@ -4,9 +4,6 @@ name := "analytics"
 version := "0.1"
 scalaVersion := "2.11.12"
 
-// AWS SDK S3 (For Hadoop-AWS)
-//libraryDependencies += "com.amazonaws" % "aws-java-sdk-s3" % "1.7.4"
-
 // Hadoop AWS (Need to match version Spark is compiled with)
 libraryDependencies += "org.apache.hadoop" % "hadoop-aws" % "2.7.6"
 
