@@ -5,10 +5,6 @@ import org.apache.spark.sql.functions._
 import scala.collection.JavaConverters._
 import java.util.Scanner
 
-import org.apache.spark.sql.types.{TimestampType}
-
-import scala.collection.immutable.ListMap
-
 case class Config(path: String = "")
 
 object VOD {
@@ -19,7 +15,7 @@ object VOD {
       head(
         """Extract-Transform-Load (ETL) task for catalogue table
           |
-          |Parses UPDATED_VOD events from S3 and creates catalogue table
+          |Parses UPDATED_VOD and NEW_VOD_FROM_DVE events from and creates catalogue table
         """.stripMargin)
 
       opt[String]('p', "path").action( (x, c) =>
@@ -49,7 +45,7 @@ object VOD {
       .option("multiLine", false)
       .schema(Schema.root)
       .json(ds)
-      .where(col("payload.data.ta") === ActionType.UPDATED_VOD)
+      .where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
 
 
     //
@@ -77,13 +73,13 @@ object VOD {
    // video_id      | integer                     |           |          |
    // video_dve_id  | integer                     |           |          |
    // realm_id      | integer                     |           |          |
-   // title         | character varying(512)      |           |          |
-   // description   | character varying(256)      |           |          |
+   // title         | character varying(1024)     |           |          |
+   // description   | character varying(1024)     |           |          |
    // duration      | integer                     |           |          |
-   // thumbnail_url | character varying(256)      |           |          |
+   // thumbnail_url | character varying(1024)     |           |          |
    // deleted       | boolean                     |           |          |
    // draft         | boolean                     |           |          |
-   // tags          | character varying(256)      |           |          |
+   // tags          | character varying(1024)     |           |          |
    // imported_at   | timestamp without time zone |           |          |
    // updated_at    | timestamp without time zone |           |          |
    //
@@ -104,38 +100,22 @@ object VOD {
         col("payload.data.v.deleted"),
         col("payload.data.v.draft"),
         mkString(col("payload.data.v.tags")).alias("tags"),
-        lit(null).cast(TimestampType).alias("imported_at"),
+        when(col("payload.data.ta") === ActionType.NEW_VOD_FROM_DVE, col("ts"))
+          .otherwise(lit(null))
+          .alias("imported_at"),
         col("ts").alias("updated_at")
       )
 
-    // Spark maps StringType to "TEXT" when saving a JDBC
-    // Unfortunately, RedShift maps "TEXT" types to VARCHAR(256), so we must overwrite the schema
-    val schema = ListMap(
-      "video_id"      -> "INTEGER",
-      "video_dve_id"  -> "INTEGER",
-      "realm_id"      -> "INTEGER",
-      "title"         -> "VARCHAR(1024)",
-      "description"   -> "VARCHAR(1024)",
-      "duration"      -> "INTEGER",
-      "thumbnail_url" -> "VARCHAR(1024)",
-      "deleted"       -> "BOOLEAN",
-      "draft"         -> "BOOLEAN",
-      "tags"          -> "VARCHAR(1024)",
-      "imported_at"   -> "TIMESTAMP",
-      "updated_at"    -> "TIMESTAMP"
-    )
 
     updates
       .write
       .format("jdbc")
-      .mode(SaveMode.Overwrite)
+      .mode(SaveMode.Append)
       .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
       .option("url", spark.conf.get("spark.jdbc.url"))
       .option("user", spark.conf.get("spark.jdbc.username"))
       .option("password", spark.conf.get("spark.jdbc.password"))
       .option("dbtable", "catalogue")
-      .option("createTableOptions", " COMPOUND SORTKEY(realm_id, updated_at, deleted, draft)")
-      .option("createTableColumnTypes", schema.map(_.productIterator.mkString(" ")).mkString(", "))
       .save()
   }
 }
