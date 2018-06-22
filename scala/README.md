@@ -58,6 +58,8 @@
 
 ### Starting
 
+On OS X you need to enable Remote Login under Sharing in System Preferences
+
     mkdir "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/logs"
     mkdir "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/work"
 
