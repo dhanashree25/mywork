@@ -74,7 +74,9 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
 
     "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/conf/spark-env.sh"
 
-    SPARK_WORKER_INSTANCES=2
+    SPARK_EXECUTOR_MEMORY=2048M
+
+    SPARK_WORKER_INSTANCES=1
     SPARK_WORKER_MEMORY=6G
     SPARK_WORKER_CORES=4
 
