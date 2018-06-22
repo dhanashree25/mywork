@@ -84,19 +84,19 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
 
 ### Local
 
-
     export SCALA_VERSION="2.11"
     export HADOOP_VERSION="2.7.6"
     export VERSION="0.1"
+
     export AWS_ACCESS_KEY_ID="AKIAJVXR75TBLKUQ5P6Q"
-    export AWS_SECRET_KEY="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"
+    export AWS_SECRET_ACCESS_KEY="+JQDd5NELEOZyUlg9k/hvw3LDJvsdPRceT7cmu1H"
 
     spark-submit \
         --class=Main \
         --master="local[*]" \
         --deploy-mode=client \
         --conf="spark.hadoop.fs.s3a.access.key=${AWS_ACCESS_KEY_ID}" \
-        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_KEY}" \
+        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_ACCESS_KEY}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
         --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION}" \
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar"
@@ -108,7 +108,7 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
         --master=spark://127.0.0.1:7077 \
         --deploy-mode=client \
         --conf="spark.hadoop.fs.s3a.access.key=${AWS_ACCESS_KEY_ID}" \
-        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_KEY}" \
+        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_ACCESS_KEY}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
         --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION}" \
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar"
@@ -121,7 +121,7 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
         --master=spark://127.0.0.1:7077 \
         --deploy-mode=client \
         --conf="spark.hadoop.fs.s3a.access.key=${AWS_ACCESS_KEY_ID}" \
-        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_KEY}" \
+        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_ACCESS_KEY}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
         --jars="./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar" \
         --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION}"
