@@ -4,11 +4,11 @@ import com.diceplatform.brain.implicits._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql._
 
-object Main {
+object Signup {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder.appName("Analytics").getOrCreate()
 
-    val path = "s3a://dce-tracking/prod/2018/06/09/*/*"
+    val path = "s3a://dce-tracking/prod/2018/06/23/*/*"
 
     // Parse single-line multi-JSON object into single-line single JSON object
       val rdd = spark.sparkContext
