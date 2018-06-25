@@ -1,0 +1,12 @@
+[
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "test_custom_signup",
+    "Type": "CUSTOM_JAR",
+    "Jar": "s3://test-dce-spark/analytics_2.11-0.1.jar",
+    "Args": [
+      "class",
+	"Signup.scala"
+    ]
+  }
+]
