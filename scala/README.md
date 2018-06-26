@@ -58,6 +58,8 @@
 
 ### Starting
 
+On OS X you need to enable Remote Login under Sharing in System Preferences
+
     mkdir "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/logs"
     mkdir "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/work"
 
@@ -72,7 +74,9 @@
 
     "/usr/local/Cellar/apache-spark/${SPARK_VERSION}/libexec/conf/spark-env.sh"
 
-    SPARK_WORKER_INSTANCES=2
+    SPARK_EXECUTOR_MEMORY=2048M
+
+    SPARK_WORKER_INSTANCES=1
     SPARK_WORKER_MEMORY=6G
     SPARK_WORKER_CORES=4
 
@@ -82,21 +86,30 @@
 
 ### Local
 
-
     export SCALA_VERSION="2.11"
     export HADOOP_VERSION="2.7.6"
     export VERSION="0.1"
+
     export AWS_ACCESS_KEY_ID="AKIAJVXR75TBLKUQ5P6Q"
-    export AWS_SECRET_KEY="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"
+    export AWS_SECRET_ACCESS_KEY="+JQDd5NELEOZyUlg9k/hvw3LDJvsdPRceT7cmu1H"
+
+    export JDBC_URL="jdbc:postgresql://qa-redshift-cluster.camxxuuvbchc.eu-west-1.redshift.amazonaws.com/redshift"
+    export JDBC_USERNAME="saffron"
+    export JDBC_PASSWORD="1Nn0v8t3"
+    export JDBC_DRIVER="com.amazon.redshift.jdbc.Driver"
 
     spark-submit \
         --class=Main \
         --master="local[*]" \
         --deploy-mode=client \
         --conf="spark.hadoop.fs.s3a.access.key=${AWS_ACCESS_KEY_ID}" \
-        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_KEY}" \
+        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_ACCESS_KEY}" \
+        --conf="spark.jdbc.url=${JDBC_URL}" \
+        --conf="spark.jdbc.username=${JDBC_USERNAME}" \
+        --conf="spark.jdbc.password=${JDBC_PASSWORD}" \
+        --conf="spark.jdbc.driver=${JDBC_DRIVER}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
-        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION}" \
+        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0" \
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar"
 
 ### Master
@@ -106,9 +119,13 @@
         --master=spark://127.0.0.1:7077 \
         --deploy-mode=client \
         --conf="spark.hadoop.fs.s3a.access.key=${AWS_ACCESS_KEY_ID}" \
-        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_KEY}" \
+        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_ACCESS_KEY}" \
+        --conf="spark.jdbc.url=${JDBC_URL}" \
+        --conf="spark.jdbc.username=${JDBC_USERNAME}" \
+        --conf="spark.jdbc.password=${JDBC_PASSWORD}" \
+        --conf="spark.jdbc.driver=${JDBC_DRIVER}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
-        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION}" \
+        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0" \
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar"
 
 
@@ -119,7 +136,12 @@
         --master=spark://127.0.0.1:7077 \
         --deploy-mode=client \
         --conf="spark.hadoop.fs.s3a.access.key=${AWS_ACCESS_KEY_ID}" \
-        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_KEY}" \
+        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_ACCESS_KEY}" \
+        --conf="spark.jdbc.url=${JDBC_URL}" \
+        --conf="spark.jdbc.username=${JDBC_USERNAME}" \
+        --conf="spark.jdbc.password=${JDBC_PASSWORD}" \
+        --conf="spark.jdbc.driver=${JDBC_DRIVER}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
         --jars="./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar" \
-        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION}"
+        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0"
+
