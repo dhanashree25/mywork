@@ -5,7 +5,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.hadoop.io._
 
-case class Config(path: String = "")
+case class Config(path: String = "", dryRun: Boolean = false)
 
 object VOD {
   def main(args: Array[String]): Unit = {
@@ -21,13 +21,21 @@ object VOD {
 
       opt[String]('p', "path").action( (x, c) =>
         c.copy(path = x) ).text("path to files")
+
+      opt[Boolean]('d', "dryRun").action( (x, c) =>
+        c.copy(dryRun = x) ).text("dry run")
     }
 
     var path: String = ""
+    var dryRun: Boolean = false
     parser.parse(args, Config()) match {
-      case Some(c) => path = c.path
+      case Some(c) => {
+        path = c.path
+        dryRun = c.dryRun
+      }
       case None => System.exit(1)
     }
+    // TODO: Fix check for empty path
 
     val events = spark.read
         .jsonSingleLine(spark, path, Schema.root)
@@ -89,11 +97,15 @@ object VOD {
         col("ts").alias("updated_at")
       )
 
-      updates
-        .write
-        .redshift(spark)
-        .option("dbtable", "catalogue")
-        .mode(SaveMode.Append)
-        .save()
+    if (!dryRun) {
+          updates
+            .write
+            .redshift(spark)
+            .option("dbtable", "catalogue")
+            .mode(SaveMode.Append)
+            .save()
+    } else {
+      updates.show()
+    }
   }
 }
