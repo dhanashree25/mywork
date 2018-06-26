@@ -2,11 +2,18 @@
   {
     "ActionOnFailure": "CONTINUE",
     "Name": "test_custom_signup",
-    "Type": "CUSTOM_JAR",
-    "Jar": "s3://test-dce-spark/analytics_2.11-0.1.jar",
-    "Args": [
-      "class",
-	"Signup.scala"
-    ]
+    "Type": "Spark",
+    "Args":[
+	"--class",
+	"Signup",
+	"--conf=spark.hadoop.fs.s3n.awsSecretAccessKeyId=+JQDd5NELEOZyUlg9k/hvw3LDJvsdPRceT7cmu1H",
+	"--conf=spark.hadoop.fs.s3n.awsAccessKeyId=AKIAJVXR75TBLKUQ5P6Q",
+        "--repositories",
+        "https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages",
+        "com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3",
+	"s3://test-dce-spark/analytics_2.11-0.1.jar"
+        ]
   }
 ]
+

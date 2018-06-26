@@ -8,7 +8,8 @@ object Signup {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder.appName("Analytics").getOrCreate()
 
-    val path = "s3a://dce-tracking/prod/2018/06/23/*/*"
+    val path = "s3n://dce-tracking/prod/2018/06/23/*/*"
+    print (path)
 
     // Parse single-line multi-JSON object into single-line single JSON object
       val rdd = spark.sparkContext
