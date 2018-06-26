@@ -1,15 +1,15 @@
 import com.diceplatform.brain._
+
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-
-import scala.collection.JavaConverters._
-import java.util.Scanner
+import org.apache.hadoop.io._
 
 case class Config(path: String = "")
 
 object VOD {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder.appName("Analytics").getOrCreate()
+    val sc = spark.sparkContext
 
     val parser = new scopt.OptionParser[Config]("scopt") {
       head(
@@ -28,25 +28,19 @@ object VOD {
       case None => System.exit(1)
     }
 
-    // Parse single-line multi-JSON object into single-line single JSON object
-    // TODO: Refactor, _.replace() returns entire string in memory
-    // TODO: Refactor: }{ is very naive, if it occurs in a string, it will break
-    val rdd = spark.sparkContext
-      .textFile(path)
-      .map(_.replace("}{", "}\n{"))
-      .flatMap(i => new Scanner(i).useDelimiter("\n").asScala.toStream)
+    val rdd = sc.hadoopFile(path, classOf[SingleJSONLineInputFormat], classOf[LongWritable], classOf[Text])
+      .map(pair => pair._2.toString)
+      .setName(path)
 
-    val ds = spark.createDataset(rdd)(Encoders.STRING)
-
-    spark.sql("set spark.sql.caseSensitive=true")
-
-    val df = spark.read
+    val events = spark.read
       .option("allowSingleQuotes", false)
       .option("multiLine", false)
       .schema(Schema.root)
-      .json(ds)
-      .where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
+      .json(spark.createDataset(rdd)(Encoders.STRING))
 
+    spark.sql("set spark.sql.caseSensitive=true")
+
+    val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
 
     //
     //  Table "public.realm"
@@ -84,7 +78,6 @@ object VOD {
    // updated_at    | timestamp without time zone |           |          |
    //
 
-
     val mkString = udf((x:Seq[String]) => x.toSet.mkString(","))
 
     val updates = df
@@ -106,16 +99,15 @@ object VOD {
         col("ts").alias("updated_at")
       )
 
-
-    updates
-      .write
-      .format("jdbc")
-      .mode(SaveMode.Append)
-      .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-      .option("url", spark.conf.get("spark.jdbc.url"))
-      .option("user", spark.conf.get("spark.jdbc.username"))
-      .option("password", spark.conf.get("spark.jdbc.password"))
-      .option("dbtable", "catalogue")
-      .save()
+      updates
+        .write
+        .format("jdbc")
+        .mode(SaveMode.Append)
+        .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
+        .option("url", spark.conf.get("spark.jdbc.url"))
+        .option("user", spark.conf.get("spark.jdbc.username"))
+        .option("password", spark.conf.get("spark.jdbc.password"))
+        .option("dbtable", "catalogue")
+        .save()
   }
 }
