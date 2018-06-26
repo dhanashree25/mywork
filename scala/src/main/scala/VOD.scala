@@ -1,15 +1,15 @@
 import com.diceplatform.brain._
+
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
+import org.apache.hadoop.io._
 
-import scala.collection.JavaConverters._
-import java.util.Scanner
-
-case class Config(path: String = "")
+case class Config(path: String = "", dryRun: Boolean = false)
 
 object VOD {
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder.appName("Analytics").getOrCreate()
+    val sc = spark.sparkContext
 
     val parser = new scopt.OptionParser[Config]("scopt") {
       head(
@@ -23,30 +23,30 @@ object VOD {
     }
 
     var path: String = ""
+    var dryRun: Boolean = false
     parser.parse(args, Config()) match {
-      case Some(c) => path = c.path
+      case Some(c) => {
+        path = c.path
+        dryRun = c.dryRun
+      }
       case None => System.exit(1)
     }
+    // TODO: Fix check for empty path
 
-    // Parse single-line multi-JSON object into single-line single JSON object
-    // TODO: Refactor, _.replace() returns entire string in memory
-    // TODO: Refactor: }{ is very naive, if it occurs in a string, it will break
-    val rdd = spark.sparkContext
-      .textFile(path)
-      .map(_.replace("}{", "}\n{"))
-      .flatMap(i => new Scanner(i).useDelimiter("\n").asScala.toStream)
+    val rdd = sc.hadoopFile(path, classOf[SingleJSONLineInputFormat], classOf[LongWritable], classOf[Text])
+      .map(pair => pair._2.toString)
+      .setName(path)
 
-    val ds = spark.createDataset(rdd)(Encoders.STRING)
-
-    spark.sql("set spark.sql.caseSensitive=true")
-
-    val df = spark.read
+    val events = spark.read
       .option("allowSingleQuotes", false)
       .option("multiLine", false)
       .schema(Schema.root)
-      .json(ds)
-      .where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
+      .json(spark.createDataset(rdd)(Encoders.STRING))
 
+    // TODO: Add support for stream events
+    spark.sql("set spark.sql.caseSensitive=true")
+
+    val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
 
     //
     //  Table "public.realm"
@@ -66,24 +66,23 @@ object VOD {
       .option("dbtable", "realm")
       .load()
 
-   //
-   //                             Table "public.catalogue"
-   //    Column     |            Type             | Collation | Nullable | Default
-   // --------------+-----------------------------+-----------+----------+---------
-   // video_id      | integer                     |           |          |
-   // video_dve_id  | integer                     |           |          |
-   // realm_id      | integer                     |           |          |
-   // title         | character varying(1024)     |           |          |
-   // description   | character varying(1024)     |           |          |
-   // duration      | integer                     |           |          |
-   // thumbnail_url | character varying(1024)     |           |          |
-   // deleted       | boolean                     |           |          |
-   // draft         | boolean                     |           |          |
-   // tags          | character varying(1024)     |           |          |
-   // imported_at   | timestamp without time zone |           |          |
-   // updated_at    | timestamp without time zone |           |          |
-   //
-
+    //
+    //                             Table "public.catalogue"
+    //    Column     |            Type             | Collation | Nullable | Default
+    // --------------+-----------------------------+-----------+----------+---------
+    // video_id      | integer                     |           |          |
+    // video_dve_id  | integer                     |           |          |
+    // realm_id      | integer                     |           |          |
+    // title         | character varying(1024)     |           |          |
+    // description   | character varying(1024)     |           |          |
+    // duration      | integer                     |           |          |
+    // thumbnail_url | character varying(1024)     |           |          |
+    // deleted       | boolean                     |           |          |
+    // draft         | boolean                     |           |          |
+    // tags          | character varying(1024)     |           |          |
+    // imported_at   | timestamp without time zone |           |          |
+    // updated_at    | timestamp without time zone |           |          |
+    //
 
     val mkString = udf((x:Seq[String]) => x.toSet.mkString(","))
 
@@ -106,16 +105,19 @@ object VOD {
         col("ts").alias("updated_at")
       )
 
-
-    updates
-      .write
-      .format("jdbc")
-      .mode(SaveMode.Append)
-      .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-      .option("url", spark.conf.get("spark.jdbc.url"))
-      .option("user", spark.conf.get("spark.jdbc.username"))
-      .option("password", spark.conf.get("spark.jdbc.password"))
-      .option("dbtable", "catalogue")
-      .save()
+    if (!dryRun) {
+          updates
+            .write
+            .format("jdbc")
+            .mode(SaveMode.Append)
+            .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
+            .option("url", spark.conf.get("spark.jdbc.url"))
+            .option("user", spark.conf.get("spark.jdbc.username"))
+            .option("password", spark.conf.get("spark.jdbc.password"))
+            .option("dbtable", "catalogue")
+            .save()
+    } else {
+      updates.show()
+    }
   }
 }
