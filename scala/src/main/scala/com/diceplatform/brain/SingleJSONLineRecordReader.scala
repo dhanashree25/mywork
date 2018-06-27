@@ -33,7 +33,6 @@ class SingleJSONLineRecordReader(job: Configuration, split: FileSplit) extends R
     // Rest previous value without clearing the underlying byte array
     value.clear()
 
-    var jsonLength = 0 // tracks value.getLength(), as an optimization
     var bytesConsumed = 0
 
     var break = false
@@ -88,7 +87,6 @@ class SingleJSONLineRecordReader(job: Configuration, split: FileSplit) extends R
       val appendLength = readLength - newLineLength
       if (appendLength > 0) {
         value.append(buffer, startPosition, appendLength)
-        jsonLength += bytesConsumed
       }
     } while (!break && !found)
 
