@@ -19,6 +19,7 @@ object Schema {
     StructField("startDate", TimestampType, nullable=true),
     StructField("endDate", TimestampType, nullable=true),
     StructField("thumbnailUrl", StringType, nullable=true),
+    StructField("thumbnail", StringType, nullable=true),
     StructField("vodDveId", IntegerType, nullable=true),
     StructField("live", BooleanType, nullable=true),
     StructField("draft", BooleanType, nullable=true),
