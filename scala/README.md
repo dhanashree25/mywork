@@ -145,3 +145,20 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
         --jars="./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar" \
         --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0"
 
+
+
+## Spark SQL
+
+    spark-sql \
+        --master=spark://127.0.0.1:7077 \
+        --deploy-mode=client \
+        --conf="spark.hadoop.fs.s3a.access.key=${AWS_ACCESS_KEY_ID}" \
+        --conf="spark.hadoop.fs.s3a.secret.key=${AWS_SECRET_ACCESS_KEY}" \
+        --conf="spark.jdbc.url=${JDBC_URL}" \
+        --conf="spark.jdbc.username=${JDBC_USERNAME}" \
+        --conf="spark.jdbc.password=${JDBC_PASSWORD}" \
+        --conf="spark.jdbc.driver=${JDBC_DRIVER}" \
+        --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
+        --jars="./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar" \
+        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0"
+
