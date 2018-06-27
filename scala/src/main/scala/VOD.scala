@@ -17,28 +17,27 @@ object VOD {
         """Extract-Transform-Load (ETL) task for catalogue table
           |
           |Parses UPDATED_VOD and NEW_VOD_FROM_DVE events from and creates catalogue table
-        """.stripMargin)
+        """.stripMargin
+      )
 
-      opt[String]('p', "path").action( (x, c) =>
-        c.copy(path = x) ).text("path to files")
+      opt[String]('p', "path")
+        .action((x, c) => c.copy(path = x) )
+        .text("path to files, local or remote")
+        .required()
 
-      opt[Boolean]('d', "dryRun").action( (x, c) =>
-        c.copy(dryRun = x) ).text("dry run")
+      opt[Boolean]('d', "dryRun")
+        .action((x, c) => c.copy(dryRun = x) )
+        .text("dry run")
     }
 
-    var path: String = ""
-    var dryRun: Boolean = false
-    parser.parse(args, Config()) match {
-      case Some(c) => {
-        path = c.path
-        dryRun = c.dryRun
-      }
+    var cli: Config = Config()
+    parser.parse(args, cli) match {
+      case Some(c) => cli = c
       case None => System.exit(1)
     }
-    // TODO: Fix check for empty path
 
     val events = spark.read
-        .jsonSingleLine(spark, path, Schema.root)
+        .jsonSingleLine(spark, cli.path, Schema.root)
 
     spark.sql("set spark.sql.caseSensitive=true")
 
@@ -97,7 +96,7 @@ object VOD {
         col("ts").alias("updated_at")
       )
 
-    if (!dryRun) {
+    if (!cli.dryRun) {
           updates
             .write
             .redshift(spark)
