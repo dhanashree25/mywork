@@ -11,9 +11,9 @@ object VOD extends Main {
   def main(args: Array[String]): Unit = {
     val parser = new scopt.OptionParser[Config]("scopt") {
       head(
-        """Extract-Transform-Load (ETL) task for catalogue table
+        """Extract-Transform-Load (ETL) task for video-on-demand (VOD) events
           |
-          |Parses UPDATED_VOD and NEW_VOD_FROM_DVE events from and creates catalogue table
+          |Parses UPDATED_VOD and NEW_VOD_FROM_DVE events from JSON objects stored in files and appends to the catalogue table
         """.stripMargin
       )
 
