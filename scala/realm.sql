@@ -4,15 +4,16 @@ CREATE TABLE "public"."realm" (
 ) COMPOUND SORTKEY(realm_id, name);
 
 INSERT INTO "realm" ("realm_id", "name") VALUES
-    (2, 'Test'),
-    (5, 'Test'),
-    (6, 'Test'),
-    (7, 'Premier League'),
-    (9, 'PBR'),
-    (10, 'Test'),
-    (11, 'Test'),
-    (12, 'Food Tube'),
-    (13, 'Test'),
-    (14, 'WWE'),
-    (15, 'Volleyball'),
-    (16, 'Test');
+    (2, 'dce.ufc'),
+    (5, 'Unknown'),
+    (6, 'Unknown'),
+    (7, 'dce.epl'),
+    (9, 'dce.pbr'),
+    (10, 'dce.sport'),
+    (11, 'dce.ssport'),
+    (12, 'Unknown'),
+    (13, 'Unknown'),
+    (14, 'Unknown'),
+    (15, 'dce.fivb'),
+    (16, 'dce.seriea');
+

@@ -19,10 +19,11 @@ object Schema {
     StructField("startDate", TimestampType, nullable=true),
     StructField("endDate", TimestampType, nullable=true),
     StructField("thumbnailUrl", StringType, nullable=true),
-    StructField("vodDveId", StringType, nullable=true),
+    StructField("vodDveId", IntegerType, nullable=true),
     StructField("live", BooleanType, nullable=true),
     StructField("draft", BooleanType, nullable=true),
-    StructField("duration", LongType, nullable=true)
+    StructField("duration", LongType, nullable=true),
+    StructField("tags", ArrayType(StringType, containsNull=false), nullable=true)
   ))
 
   val data = StructType(List(
@@ -31,7 +32,8 @@ object Schema {
     StructField("cid", StringType, nullable=true),
     StructField("device", StringType, nullable=true),
     StructField("startedAt", LongType, nullable=true),
-    StructField("v", video, nullable=true)
+    StructField("v", video, nullable=true),
+    StructField("vid", IntegerType, nullable=true)
   ))
 
   val payload = StructType(List(
@@ -49,6 +51,6 @@ object Schema {
     StructField("payload", payload, nullable=true),
     StructField("realm", StringType, nullable=true),
     StructField("town", StringType, nullable=true),
-    StructField("ts", StringType, nullable=true)
+    StructField("ts", TimestampType, nullable=true)
   ))
 }
