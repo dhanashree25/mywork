@@ -12,23 +12,52 @@ object Signup {
   def main(args: Array[String]): Unit = {
     
     val spark = SparkSession.builder.appName("Analytics").getOrCreate()
+    
+    val parser = new scopt.OptionParser[Config]("scopt") {
+      head(
+        """Extract-Transform-Load (ETL) task for signup table
+          |
+          |Parses REGISTER_USER events from and inserts into signups table
+        """.stripMargin)
 
-    val path = "s3n://dce-tracking/prod/2018/06/25/*/*"
+      opt[String]('p', "path").action( (x, c) =>
+        c.copy(path = x) ).text("path to files")
+        }
+
+    var path: String = ""
+      parser.parse(args, Config()) match {
+        case Some(c) => path = c.path
+        case None => System.exit(1)
+      }
+
     // Parse single-line multi-JSON object into single-line single JSON object
-      val rdd = spark.sparkContext
-        .textFile(path)
-        .map(_.replace("}{", "}\n{")) // TODO: Prone to breakage
-        .flatMap(_.split("\n"))
+    val rdd = spark.sparkContext
+      .textFile(path)
+      .map(_.replace("}{", "}\n{"))
+      .flatMap(i => new Scanner(i).useDelimiter("\n").asScala.toStream)
   
       // TODO: Investigate Encoders
-      val ds = spark.createDataset(rdd)(Encoders.STRING)
-      val df = spark.read
+
+    val ds = spark.createDataset(rdd)(Encoders.STRING)
+  
+    val df = spark.read
         .option("allowSingleQuotes", false)
         .option("multiLine", false)
         .schema(Schema.root)
         .json(ds)
         .normalize()
-      val df1= df.where(col("action") === ActionType.REGISTER_USER)
+        
+//                               Table "public.signups"
+//   Column    |            Type             | Collation | Nullable | Default 
+//-------------+-----------------------------+-----------+----------+---------
+// customer_id | character varying(20)       |           |          | 
+// realm       | character varying(50)       |           |          | 
+// town        | character varying(50)       |           |          | 
+// country     | character varying(50)       |           |          | 
+// ts          | timestamp without time zone |           |          | 
+// device      | character varying(20)       |           |          | 
+
+    val signupdf = df.where(col("action") === ActionType.REGISTER_USER)
             .select(
               expr("realm"),
               col("customerId").alias("customer_id"),
@@ -37,18 +66,16 @@ object Signup {
               col("ts"),
               expr("payload.data.device as device")
             )
-      df1.show()
-      if (df1.count()>0){
-          df1.write
-                .format("jdbc")
-                .mode(SaveMode.Append)
-                .option("url", "jdbc:postgresql://172.21.105.71:5439/redshift?user=saffron&password=1Nn0v8t3")
-                .option("driver", "com.amazon.redshift.jdbc.Driver")
-                .option("dbtable", "signups")
-                .option("user", "saffron")
-                .option("password", "1Nn0v8t3")
-                .save()
-      }
-              
+
+    
+    signupdf.write
+      .format("jdbc")
+      .mode(SaveMode.Append)
+      .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
+      .option("url", spark.conf.get("spark.jdbc.url"))
+      .option("user", spark.conf.get("spark.jdbc.username"))
+      .option("password", spark.conf.get("spark.jdbc.password"))
+      .option("dbtable", "signup")
+      .save()
   }
 }
