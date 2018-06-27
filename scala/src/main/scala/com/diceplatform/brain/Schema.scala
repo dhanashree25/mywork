@@ -34,7 +34,8 @@ object Schema {
     StructField("device", StringType, nullable=true),
     StructField("startedAt", LongType, nullable=true),
     StructField("v", video, nullable=true),
-    StructField("vid", IntegerType, nullable=true)
+    StructField("vid", IntegerType, nullable=true),
+    StructField("DGE_EVENT_ID", IntegerType, nullable=true)
   ))
 
   val payload = StructType(List(
