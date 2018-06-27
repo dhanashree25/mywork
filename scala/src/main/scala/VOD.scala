@@ -38,8 +38,6 @@ object VOD extends Main {
 
     // TODO: Add support for stream events
 
-    val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
-
     //
     //  Table "public.realm"
     //   Column  |          Type          | Collation | Nullable | Default
@@ -71,8 +69,7 @@ object VOD extends Main {
    // imported_at   | timestamp without time zone |           |          |
    // updated_at    | timestamp without time zone |           |          |
    //
-
-    val mkString = udf((x:Seq[String]) => x.toSet.mkString(","))
+    val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
 
     val updates = df
       .join(realms, df.col("realm") === realms.col("name"))
@@ -86,7 +83,7 @@ object VOD extends Main {
         col("payload.data.v.thumbnailUrl").alias("thumbnail_url"),
         col("payload.data.v.deleted"),
         col("payload.data.v.draft"),
-        mkString(col("payload.data.v.tags")).alias("tags"),
+        UDF.mkString(col("payload.data.v.tags")).alias("tags"),
         when(col("payload.data.ta") === ActionType.NEW_VOD_FROM_DVE, col("ts"))
           .otherwise(lit(null))
           .alias("imported_at"),
