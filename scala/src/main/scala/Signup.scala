@@ -6,12 +6,14 @@ import org.apache.spark.sql._
 import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
+import org.apache.hadoop.io._
 
 
 object Signup {
   def main(args: Array[String]): Unit = {
     
     val spark = SparkSession.builder.appName("Analytics").getOrCreate()
+    val sc = spark.sparkContext
     
     val parser = new scopt.OptionParser[Config]("scopt") {
       head(
@@ -31,21 +33,13 @@ object Signup {
       }
 
     // Parse single-line multi-JSON object into single-line single JSON object
-    val rdd = spark.sparkContext
-      .textFile(path)
-      .map(_.replace("}{", "}\n{"))
-      .flatMap(i => new Scanner(i).useDelimiter("\n").asScala.toStream)
-  
-      // TODO: Investigate Encoders
-
-    val ds = spark.createDataset(rdd)(Encoders.STRING)
+     val rdd = sc.hadoopFile(path, classOf[SingleJSONLineInputFormat], classOf[LongWritable], classOf[Text])
+      .map(pair => pair._2.toString)
+      .setName(path)
   
     val df = spark.read
-        .option("allowSingleQuotes", false)
-        .option("multiLine", false)
-        .schema(Schema.root)
-        .json(ds)
-        .normalize()
+      .schema(Schema.root)
+      .json(spark.createDataset(rdd)(Encoders.STRING))
         
 //                               Table "public.signups"
 //   Column    |            Type             | Collation | Nullable | Default 
@@ -56,8 +50,10 @@ object Signup {
 // country     | character varying(50)       |           |          | 
 // ts          | timestamp without time zone |           |          | 
 // device      | character varying(20)       |           |          | 
-
-    val signupdf = df.where(col("action") === ActionType.REGISTER_USER)
+    spark.sql("set spark.sql.caseSensitive=true")
+      
+      
+    val signupdf = df.where(col("payload.data.TA") === ActionType.REGISTER_USER)
             .select(
               expr("realm"),
               col("customerId").alias("customer_id"),
@@ -66,16 +62,17 @@ object Signup {
               col("ts"),
               expr("payload.data.device as device")
             )
-
-    
-    signupdf.write
-      .format("jdbc")
-      .mode(SaveMode.Append)
-      .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-      .option("url", spark.conf.get("spark.jdbc.url"))
-      .option("user", spark.conf.get("spark.jdbc.username"))
-      .option("password", spark.conf.get("spark.jdbc.password"))
-      .option("dbtable", "signup")
-      .save()
+    print("-----total------",df.count(),"-----signups------", signupdf.count())
+    if (signupdf.count()> 0){
+          signupdf.write
+            .format("jdbc")
+            .mode(SaveMode.Append)
+            .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
+            .option("url", spark.conf.get("spark.jdbc.url"))
+            .option("user", spark.conf.get("spark.jdbc.username"))
+            .option("password", spark.conf.get("spark.jdbc.password"))
+            .option("dbtable", "signups")
+            .save()
+    }
   }
 }
