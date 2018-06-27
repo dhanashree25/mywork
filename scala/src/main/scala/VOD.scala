@@ -7,11 +7,8 @@ import org.apache.hadoop.io._
 
 case class Config(path: String = "", dryRun: Boolean = false)
 
-object VOD {
+object VOD extends Main {
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder.appName("Analytics").getOrCreate()
-    val sc = spark.sparkContext
-
     val parser = new scopt.OptionParser[Config]("scopt") {
       head(
         """Extract-Transform-Load (ETL) task for catalogue table
@@ -39,7 +36,7 @@ object VOD {
     val events = spark.read
         .jsonSingleLine(spark, cli.path, Schema.root)
 
-    spark.sql("set spark.sql.caseSensitive=true")
+    // TODO: Add support for stream events
 
     val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
 
