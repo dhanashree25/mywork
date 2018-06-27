@@ -13,8 +13,7 @@ object Main {
     // Parse single-line multi-JSON object into single-line single JSON object
     val df = spark.read
       .jsonSingleLine(spark, path, Schema.root)
-      .normalize()
 
-    val a = df.where(col("action") === ActionType.REGISTER_USER).select(count(lit(1)))
+    val a = df.where(col("payload.action") === ActionType.REGISTER_USER).select(count(lit(1)))
   }
 }
