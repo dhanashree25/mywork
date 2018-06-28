@@ -1,0 +1,29 @@
+#!/bin/sh
+
+set -u -x
+#bucket name- test-dce-spark
+#cluster name- qa-nlapi-dce-test-emr
+BUCKET=${STACK_NAME}-${PLATFORM}-emr
+CLUSTER=${STACK_NAME}-${PLATFORM}-spark-emr
+CLUSTER_ID=$(aws emr list-clusters --region=eu-west-1 --active | jq '.[][] | select(.Name == "'${CLUSTER}'") | .Id' | tr -d '"')
+
+aws s3 cp --recursive s3://$BUCKET ./jobs
+git clone git@bitbucket.org:saffrondigital/dce_spark_jobs.git repo
+
+rm -rf repo/.git
+CHANGES=$(git diff --no-index --name-only jobs repo | grep -v /dev/null)
+CHANGED_JOBS=$(echo $CHANGES | grep py)
+
+# Copy changed files to the bucket
+for change in ${CHANGES}; do
+    aws s3 cp --acl "authenticated-read" $change s3://${BUCKET}/
+done
+
+var_date=$(date -d "yesterday 13:00 " '+%Y-%m-%d' )
+
+{{ range $job := sections }}{{ if $job }}
+echo ${CHANGED_JOBS} | grep -qw {{ $job }}
+if [ "$?" -eq 0 ]; then
+    aws emr add-steps --region eu-west-1 --cluster-id ${CLUSTER_ID} --steps Type=Spark,Name="dce-{{ $job }}-job",ActionOnFailure=CONTINUE,Args=[--packages,{{ section $common "packages" }},s3://${BUCKET}/step.json }}]
+fi
+{{ end }}{{ end }}
