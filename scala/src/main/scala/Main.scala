@@ -11,19 +11,8 @@ object Main {
     val path = "s3a://dce-tracking/prod/2018/05/05/*/*"
 
     // Parse single-line multi-JSON object into single-line single JSON object
-    val rdd = spark.sparkContext
-      .textFile(path)
-      .map(_.replace("}{", "}\n{")) // TODO: Prone to breakage
-      .flatMap(_.split("\n"))
-
-    // TODO: Investigate Encoders
-    val ds = spark.createDataset(rdd)(Encoders.STRING)
-
     val df = spark.read
-      .option("allowSingleQuotes", false)
-      .option("multiLine", false)
-      .schema(Schema.root)
-      .json(ds)
+      .jsonSingleLine(spark, path, Schema.root)
       .normalize()
 
     val a = df.where(col("action") === ActionType.REGISTER_USER).select(count(lit(1)))
