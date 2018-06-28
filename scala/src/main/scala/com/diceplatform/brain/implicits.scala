@@ -1,6 +1,7 @@
 package com.diceplatform.brain
 
-import org.apache.spark.sql._
+import org.apache.hadoop.io.{LongWritable, Text}
+import org.apache.spark.sql.{RuntimeConfig, _}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
@@ -72,5 +73,21 @@ object implicits {
     }
 
     def normalize(): DataFrame = Normalize.transform(df)
+  }
+
+  implicit class ExtendedDataFrameReader(dfr: DataFrameReader) extends Serializable {
+    /**
+      * Read a file encoded with JSON objects on a single line
+      */
+    def jsonSingleLine(spark: SparkSession, path: String, schema: StructType): DataFrame = {
+      val rdd = spark.sparkContext
+        .hadoopFile(path, classOf[SingleJSONLineInputFormat], classOf[LongWritable], classOf[Text])
+        .map(pair => pair._2.toString)
+        .setName(path)
+
+      spark.read
+        .schema(schema)
+        .json(spark.createDataset(rdd)(Encoders.STRING))
+    }
   }
 }

@@ -1,4 +1,5 @@
 import com.diceplatform.brain._
+import com.diceplatform.brain.implicits._
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
@@ -28,15 +29,8 @@ object VOD {
       case None => System.exit(1)
     }
 
-    val rdd = sc.hadoopFile(path, classOf[SingleJSONLineInputFormat], classOf[LongWritable], classOf[Text])
-      .map(pair => pair._2.toString)
-      .setName(path)
-
     val events = spark.read
-      .option("allowSingleQuotes", false)
-      .option("multiLine", false)
-      .schema(Schema.root)
-      .json(spark.createDataset(rdd)(Encoders.STRING))
+        .jsonSingleLine(spark, path, Schema.root)
 
     spark.sql("set spark.sql.caseSensitive=true")
 
