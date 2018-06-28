@@ -46,11 +46,7 @@ object VOD {
 
     val realms = spark
       .read
-      .format("jdbc")
-      .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-      .option("url", spark.conf.get("spark.jdbc.url"))
-      .option("user", spark.conf.get("spark.jdbc.username"))
-      .option("password", spark.conf.get("spark.jdbc.password"))
+      .redshift(spark)
       .option("dbtable", "realm")
       .load()
 
@@ -95,13 +91,9 @@ object VOD {
 
       updates
         .write
-        .format("jdbc")
-        .mode(SaveMode.Append)
-        .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-        .option("url", spark.conf.get("spark.jdbc.url"))
-        .option("user", spark.conf.get("spark.jdbc.username"))
-        .option("password", spark.conf.get("spark.jdbc.password"))
+        .redshift(spark)
         .option("dbtable", "catalogue")
+        .mode(SaveMode.Append)
         .save()
   }
 }

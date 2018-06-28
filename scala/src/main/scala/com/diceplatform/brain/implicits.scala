@@ -75,7 +75,37 @@ object implicits {
     def normalize(): DataFrame = Normalize.transform(df)
   }
 
+  private val JDBC_CONF_DRIVER_KEY = "spark.jdbc.driver"
+  private val JDBC_CONF_DRIVER_DEFAULT = "com.amazon.redshift.jdbc.Driver"
+  private val JDBC_CONF_URL_KEY = "spark.jdbc.url"
+  private val JDBC_CONF_USER_KEY = "spark.jdbc.username"
+  private val JDBC_CONF_PASSWORD_KEY = "spark.jdbc.password"
+
+  implicit class ExtendedDataFrameWriter(dfw: DataFrameWriter[Row]) extends Serializable {
+    /**
+      * Get the redshift database connection for writing
+      */
+    def redshift(spark: SparkSession): DataFrameWriter[Row] = {
+      dfw.format("jdbc")
+        .option("driver", spark.conf.get(JDBC_CONF_DRIVER_KEY, JDBC_CONF_DRIVER_DEFAULT))
+        .option("url", spark.conf.get(JDBC_CONF_URL_KEY))
+        .option("user", spark.conf.get(JDBC_CONF_USER_KEY))
+        .option("password", spark.conf.get(JDBC_CONF_PASSWORD_KEY))
+    }
+  }
+
   implicit class ExtendedDataFrameReader(dfr: DataFrameReader) extends Serializable {
+    /**
+      * Get the redshift database connection for reader
+      */
+    def redshift(spark: SparkSession): DataFrameReader = {
+      dfr.format("jdbc")
+        .option("driver", spark.conf.get(JDBC_CONF_DRIVER_KEY, JDBC_CONF_DRIVER_DEFAULT))
+        .option("url", spark.conf.get(JDBC_CONF_URL_KEY))
+        .option("user", spark.conf.get(JDBC_CONF_USER_KEY))
+        .option("password", spark.conf.get(JDBC_CONF_PASSWORD_KEY))
+    }
+
     /**
       * Read a file encoded with JSON objects on a single line
       */
