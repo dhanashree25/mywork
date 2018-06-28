@@ -21,9 +21,21 @@ done
 
 var_date=$(date -d "yesterday 13:00 " '+%Y-%m-%d' )
 
-{{ range $job := sections }}{{ if $job }}
-echo ${CHANGED_JOBS} | grep -qw {{ $job }}
-if [ "$?" -eq 0 ]; then
-    aws emr add-steps --region eu-west-1 --cluster-id ${CLUSTER_ID} --steps Type=Spark,Name="dce-{{ $job }}-job",ActionOnFailure=CONTINUE,Args=[--packages,{{ section $common "packages" }},s3://${BUCKET}/step.json }}]
-fi
-{{ end }}{{ end }}
+for job in {{ section $jobs}};do
+	{{ range $job := sections }}{{ if $job }}
+	echo ${CHANGED_JOBS} | grep -qw {{ $job }}
+	if [ "$?" -eq 0 ]; then
+	    aws emr add-steps --region eu-west-1 --cluster-id ${CLUSTER_ID} --steps Type=Spark,Name="dce-{{ $job }}-job",ActionOnFailure=CONTINUE,Args=[--class, {{ section $jobs "job }} \
+	    																																			--packages,{{ section $common "packages" }}, \
+	    																																			--config,{{ section $common "awsSecretAccessKey" }}, \
+	    																																			--config,{{ section $common "awsAccessKeyId" }}, \
+	    																																			--config,{{ section $common "jdbc_url" }}, \
+	    																																			--config,{{ section $common "username" }}, \
+	    																																			--config,{{ section $common "password" }}, \
+	    																																			--repositories,{{ section $common "repositories" }}, \
+	    																																			$BUCKET/{{ section $common "jar" }}, \
+	    																																			--path,{{ section $common "path" }}/var_date/*/* \
+	    																																			]
+	fi
+	{{ end }}{{ end }}
+done
