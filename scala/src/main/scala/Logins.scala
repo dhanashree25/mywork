@@ -47,26 +47,27 @@ object Logins extends Main {
 //       Column    |            Type             | Collation | Nullable | Default 
 //    -------------+-----------------------------+-----------+----------+---------
 //     customer_id | character varying(25)       |           |          | 
-//     realm       | character varying(50)       |           |          | 
+//     realm_id    | integer                     |           |          | 
 //     town        | character varying(100)      |           |          | 
-//     country     | character varying(100)      |           |          | 
+//     country     | character (2)               |           |          | 
 //     client_ip   | character varying(50)       |           |          | 
 //     type        | character varying(50)       |           |          | 
 //     device      | character varying(25)       |           |          | 
 //     ts          | timestamp without time zone |           |          | 
-//    COMPOUND SORTKEY(ts, realm, device, country)
+//    COMPOUND SORTKEY(ts, realm_id, device, country)
 
     spark.sql("set spark.sql.caseSensitive=true")
       
     val logindf = events.where(col("payload.action") === Action.USER_SIGN_IN)
-            .select(
-              expr("realm"),
+              .join(realms, events.col("realm") === realms.col("name"))
+              .select(
+              col("realm_id"),
               col("customerId").alias("customer_id"),
               col("country"),
               col("town"),
               col("ts"),
               col("clientIp").alias("client_ip"),
-              expr("payload.data.device as device")
+              col("payload.data.device").alias("device")
             )
             
     print("-----total------"+events.count()+"-----logins------"+ logindf.count())
