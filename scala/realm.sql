@@ -1,7 +1,7 @@
 CREATE TABLE "public"."realm" (
     "realm_id" INT NOT NULL PRIMARY KEY,
     "name" VARCHAR(256) NOT NULL UNIQUE
-) COMPOUND SORTKEY(realm_id, name);
+) COMPOUND SORTKEY("realm_id", "name");
 
 INSERT INTO "realm" ("realm_id", "name") VALUES
     (2, 'dce.ufc'),
@@ -16,4 +16,3 @@ INSERT INTO "realm" ("realm_id", "name") VALUES
     (14, 'Unknown'),
     (15, 'dce.fivb'),
     (16, 'dce.seriea');
-

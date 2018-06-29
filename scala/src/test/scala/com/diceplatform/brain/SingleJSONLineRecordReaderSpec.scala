@@ -8,7 +8,11 @@ import java.io.File
 import org.scalatest._
 
 class SingleJSONLineRecordReaderSpec extends FlatSpec {
+<<<<<<< HEAD
   "an empty file" should "not read" in {
+=======
+  "an empty file" should "return no records" in {
+>>>>>>> release_candidate
     val conf = new Configuration()
     val job = new JobConf(conf)
 
@@ -34,7 +38,11 @@ class SingleJSONLineRecordReaderSpec extends FlatSpec {
     reader.close()
   }
 
+<<<<<<< HEAD
   "a file with a single level object" should "read" in {
+=======
+  "a file with a single object" should "return a single record" in {
+>>>>>>> release_candidate
     val conf = new Configuration()
     val job = new JobConf(conf)
 
@@ -59,7 +67,11 @@ class SingleJSONLineRecordReaderSpec extends FlatSpec {
     assert(value.toString == """{"foo": "bar"}""")
   }
 
+<<<<<<< HEAD
   "a file with two single level objects" should "read" in {
+=======
+  "a file with two single objects" should "return two records" in {
+>>>>>>> release_candidate
     val conf = new Configuration()
     val job = new JobConf(conf)
 
@@ -96,7 +108,11 @@ class SingleJSONLineRecordReaderSpec extends FlatSpec {
     reader.close()
   }
 
+<<<<<<< HEAD
   "a file three nested objects" should "read" in {
+=======
+  "a file with three nested objects" should "return three records" in {
+>>>>>>> release_candidate
     val conf = new Configuration()
     val job = new JobConf(conf)
 
