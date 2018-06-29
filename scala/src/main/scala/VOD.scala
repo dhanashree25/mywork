@@ -1,52 +1,42 @@
 import com.diceplatform.brain._
+import com.diceplatform.brain.implicits._
+
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
+import org.apache.hadoop.io._
 
-import scala.collection.JavaConverters._
-import java.util.Scanner
+case class Config(path: String = "", dryRun: Boolean = false)
 
-case class Config(path: String = "")
-
-object VOD {
+object VOD extends Main {
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder.appName("Analytics").getOrCreate()
-
     val parser = new scopt.OptionParser[Config]("scopt") {
       head(
-        """Extract-Transform-Load (ETL) task for catalogue table
+        """Extract-Transform-Load (ETL) task for video-on-demand (VOD) events
           |
-          |Parses UPDATED_VOD and NEW_VOD_FROM_DVE events from and creates catalogue table
-        """.stripMargin)
+          |Parses UPDATED_VOD and NEW_VOD_FROM_DVE events from JSON objects stored in files and appends to the catalogue table
+        """.stripMargin
+      )
 
-      opt[String]('p', "path").action( (x, c) =>
-        c.copy(path = x) ).text("path to files")
+      opt[String]('p', "path")
+        .action((x, c) => c.copy(path = x) )
+        .text("path to files, local or remote")
+        .required()
+
+      opt[Boolean]('d', "dryRun")
+        .action((x, c) => c.copy(dryRun = x) )
+        .text("dry run")
     }
 
-    var path: String = ""
-    parser.parse(args, Config()) match {
-      case Some(c) => path = c.path
+    var cli: Config = Config()
+    parser.parse(args, cli) match {
+      case Some(c) => cli = c
       case None => System.exit(1)
     }
 
-    // Parse single-line multi-JSON object into single-line single JSON object
-    // TODO: Refactor, _.replace() returns entire string in memory
-    // TODO: Refactor: }{ is very naive, if it occurs in a string, it will break
-    val rdd = spark.sparkContext
-      .textFile(path)
-      .map(_.replace("}{", "}\n{"))
-      .flatMap(i => new Scanner(i).useDelimiter("\n").asScala.toStream)
+    val events = spark.read
+        .jsonSingleLine(spark, cli.path, Schema.root)
 
-    val ds = spark.createDataset(rdd)(Encoders.STRING)
-
-    spark.sql("set spark.sql.caseSensitive=true")
-
-    val df = spark.read
-      .option("allowSingleQuotes", false)
-      .option("multiLine", false)
-      .schema(Schema.root)
-      .json(ds)
-      .where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
-
+    // TODO: Add support for stream events
 
     //
     //  Table "public.realm"
@@ -58,11 +48,7 @@ object VOD {
 
     val realms = spark
       .read
-      .format("jdbc")
-      .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-      .option("url", spark.conf.get("spark.jdbc.url"))
-      .option("user", spark.conf.get("spark.jdbc.username"))
-      .option("password", spark.conf.get("spark.jdbc.password"))
+      .redshift(spark)
       .option("dbtable", "realm")
       .load()
 
@@ -83,9 +69,7 @@ object VOD {
    // imported_at   | timestamp without time zone |           |          |
    // updated_at    | timestamp without time zone |           |          |
    //
-
-
-    val mkString = udf((x:Seq[String]) => x.toSet.mkString(","))
+    val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
 
     val updates = df
       .join(realms, df.col("realm") === realms.col("name"))
@@ -99,23 +83,22 @@ object VOD {
         col("payload.data.v.thumbnailUrl").alias("thumbnail_url"),
         col("payload.data.v.deleted"),
         col("payload.data.v.draft"),
-        mkString(col("payload.data.v.tags")).alias("tags"),
+        UDF.mkString(col("payload.data.v.tags")).alias("tags"),
         when(col("payload.data.ta") === ActionType.NEW_VOD_FROM_DVE, col("ts"))
           .otherwise(lit(null))
           .alias("imported_at"),
         col("ts").alias("updated_at")
       )
 
-
-    updates
-      .write
-      .format("jdbc")
-      .mode(SaveMode.Append)
-      .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-      .option("url", spark.conf.get("spark.jdbc.url"))
-      .option("user", spark.conf.get("spark.jdbc.username"))
-      .option("password", spark.conf.get("spark.jdbc.password"))
-      .option("dbtable", "catalogue")
-      .save()
+    if (!cli.dryRun) {
+          updates
+            .write
+            .redshift(spark)
+            .option("dbtable", "catalogue")
+            .mode(SaveMode.Append)
+            .save()
+    } else {
+      updates.show()
+    }
   }
 }

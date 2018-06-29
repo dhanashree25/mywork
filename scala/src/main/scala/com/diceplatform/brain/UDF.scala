@@ -19,4 +19,6 @@ object UDF {
     case 8  => "HEALTH_CHECK"
     case -1 => "OTHER"
   })
+
+  val mkString = udf((x:Seq[String]) => x.sorted.mkString(","))
 }
