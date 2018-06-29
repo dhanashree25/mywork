@@ -10,7 +10,7 @@ git clone git@bitbucket.org:saffrondigital/dce_spark_jobs.git repo
 
 rm -rf repo/.git
 CHANGES=$(git diff --no-index --name-only jobs repo | grep -v /dev/null)
-CHANGED_JOBS=$(echo $CHANGES | grep py)
+CHANGED_JOBS=$(echo $CHANGES | grep scala)
 
 # Copy changed files to the bucket
 for change in ${CHANGES}; do
@@ -22,7 +22,7 @@ var_date=$(date -d "yesterday 13:00 " '+%Y-%m-%d' )
 {{ range $job := sections }}{{ if ne $job "common" }}
 echo ${CHANGED_JOBS} | grep -qw {{ $job }}
 if [ "$?" -eq 0 ]; then
-    aws emr add-steps --region eu-west-1 --cluster-id ${CLUSTER_ID} --steps Type=Spark,Name="dce-{{ $job }}-job",ActionOnFailure=CONTINUE,Args=[--class, {{ section $job "name"}} ,--packages,{{ config "common.packages" }}, --config,{{ config "common.awsSecretAccessKey" }}, --config,{{ config "common.awsAccessKeyId" }},--config,{{ config "common.jdbc_url" }},--config,{{ config "common.username" }},--config,{{ config "common.password" }}, --repositories,{{ config "common.repositories" }}, ${BUCKET}/{{ config "common.jar" }},--path,{{ config "common.path" }}/var_date/*/* ]
+    aws emr add-steps --region {{ config "common.region" }} --cluster-id ${CLUSTER_ID} --steps Type=Spark,Name="dce-{{ $job }}-job",ActionOnFailure=CONTINUE,Args=[--class, {{ section $job "name"}} ,--packages,{{ config "common.packages" }}, --config,{{ config "common.awsSecretAccessKey" }}, --config,{{ config "common.awsAccessKeyId" }},--config,{{ config "common.jdbc_url" }},--config,{{ config "common.username" }},--config,{{ config "common.password" }}, --repositories,{{ config "common.repositories" }}, ${BUCKET}/{{ config "common.jar" }},--path,{{ config "common.path" }}/$var_date/*/* ]
 fi
 {{ end }}{{ end }}
 

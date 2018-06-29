@@ -19,7 +19,7 @@ object Logins {
       head(
         """Extract-Transform-Load (ETL) task for user_logins table
           |
-          |Parses REGISTER_USER events from and inserts into user_logins table
+          |Parses USER_SIGN_IN events from and inserts into user_logins table
         """.stripMargin)
 
       opt[String]('p', "path").action( (x, c) =>
