@@ -2,140 +2,134 @@ package com.diceplatform.brain
 
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.mapred._
-import org.apache.hadoop.fs._
-import java.io.File
+import org.apache.hadoop.io._
 
-import org.scalatest._
+class SingleJSONLineRecordReader(job: Configuration, split: FileSplit) extends RecordReader[LongWritable, Text] {
+  val BUFFER_SIZE = "com.diceplatform.brain.input.singlejsonlinerecordreader.buffer.size"
 
-class SingleJSONLineRecordReaderSpec extends FlatSpec {
-  "an empty file" should "return no records" in {
-    val conf = new Configuration()
-    val job = new JobConf(conf)
+  private val fileStart = split.getStart
+  private val fileFinish = fileStart + split.getLength
+  private var filePosition = fileStart
 
-    val testFileUrl = getClass.getResource("/empty.json")
-    val testFile = new File(testFileUrl.getFile)
-    val testFilePath = new Path(testFile.getAbsolutePath)
-    val testFileSize = testFile.length()
+  private val file = split.getPath
+  private val fileIn = file.getFileSystem(job).open(file)
 
-    val hosts: Array[String] = null
-    val split = new FileSplit(testFilePath, 0, testFileSize, hosts)
+  private val buffer = new Array[Byte](job.getInt(BUFFER_SIZE, 1024 * 1024)) // 1 MB
+  private var bufferLength = 0
+  private var bufferPosition = 0
 
-    val reader = new SingleJSONLineRecordReader(job, split)
+  private var startPosition = 0
 
-    val key = reader.createKey()
-    val value = reader.createValue()
+  private val OPEN_PARENTHESIS = '{'
+  private val CLOSE_PARENTHESIS = '}'
 
-    assert(!reader.next(key, value))
-    assert(reader.getPos == 0)
-    assert(reader.getProgress == 0)
-    assert(key.get == 0)
-    assert(value.getLength == 0)
-    assert(value.toString == "")
-    reader.close()
+  private var currentCharacter: Byte = '\0'
+  private var lastCharacter: Byte = '\0'
+
+  private val CR: Byte = '\r'
+  private val LF: Byte = '\n'
+
+  fileIn.seek(fileStart)
+
+  private def readJSON(value: Text): Int = {
+    // Rest previous value without clearing the underlying byte array
+    value.clear()
+
+    var bytesConsumed = 0
+
+    var break = false
+    var found = false
+    var newLineLength = 0
+    // Read a portion of the file in bit by bit
+    do {
+      startPosition = bufferPosition
+
+      // If we have read all of the previous buffer, read in a new buffer.
+      if (bufferPosition >= bufferLength) {
+        bufferPosition = 0
+        startPosition = 0
+
+        bufferLength = fileIn.read(buffer)
+
+        if (bufferLength <= 0) {
+          break = true
+        }
+      }
+
+      // Search buffered byte array for delimiters
+      while (bufferPosition < bufferLength && !found) {
+        currentCharacter = buffer(bufferPosition)
+
+        if (currentCharacter == LF) {
+          newLineLength = 1
+          found = true
+        }
+
+        // Object found in the middle of the line
+        if (lastCharacter    == CLOSE_PARENTHESIS &&
+            currentCharacter == OPEN_PARENTHESIS) {
+          found = true
+        }
+
+        lastCharacter = currentCharacter
+        bufferPosition += 1
+      }
+
+      // Read length may be less than the buffer position as the buffer contains parts to two objects
+      var readLength = bufferPosition - startPosition
+
+      // Reduce read length and buffer position otherwise it includes opening parenthesis
+      if (found && lastCharacter != LF) {
+        readLength -= 1
+        bufferPosition -= 1
+      }
+
+      bytesConsumed += readLength
+
+      val appendLength = readLength - newLineLength
+      if (appendLength > 0) {
+        value.append(buffer, startPosition, appendLength)
+      }
+    } while (!break && !found)
+
+    bytesConsumed
   }
 
-  "a file with a single object" should "return a single record" in {
-    val conf = new Configuration()
-    val job = new JobConf(conf)
+  override def next(key: LongWritable, value: Text): Boolean = {
+    value.clear()
 
-    val testFileUrl = getClass.getResource("/single.json")
-    val testFile = new File(testFileUrl.getFile)
-    val testFilePath = new Path(testFile.getAbsolutePath)
-    val testFileSize = testFile.length()
+    // Read file
+    while (filePosition <= fileFinish) {
+      // Set record as file position, this will change when we find a record
+      key.set(filePosition)
 
-    val hosts: Array[String] = null
-    val split = new FileSplit(testFilePath, 0, testFileSize, hosts)
+      // Read JSON object
+      val newSize = readJSON(value)
 
-    val reader = new SingleJSONLineRecordReader(job, split)
+      filePosition += newSize
 
-    val key = reader.createKey()
-    val value = reader.createValue()
+      // If newSize is 0 indicates incomplete
+      return newSize != 0
+    }
 
-    assert(reader.next(key, value))
-    assert(reader.getPos == testFileSize)
-    assert(reader.getProgress == 1.0)
-    assert(key.get == 0)
-    assert(value.getLength == testFileSize)
-    assert(value.toString == """{"foo": "bar"}""")
+    false
   }
 
-  "a file with two single objects" should "return two records" in {
-    val conf = new Configuration()
-    val job = new JobConf(conf)
+  override def createKey(): LongWritable = new LongWritable
 
-    val testFileUrl = getClass.getResource("/double.json")
-    val testFile = new File(testFileUrl.getFile)
-    val testFilePath = new Path(testFile.getAbsolutePath)
-    val testFileSize = testFile.length()
+  override def createValue(): Text = new Text
 
-    val hosts: Array[String] = null
-    val split = new FileSplit(testFilePath, 0, testFileSize, hosts)
+  override def getPos: Long = filePosition
 
-    val reader = new SingleJSONLineRecordReader(job, split)
-
-    val key = reader.createKey()
-    val value = reader.createValue()
-
-    assert(reader.next(key, value))
-    assert(value.toString == """{"foo": "bar"}""")
-    assert(reader.getPos == 14)
-    assert(reader.getProgress === (14.0 / testFileSize))
-    assert(key.get == 0)
-    assert(value.getLength == 14)
-
-    assert(reader.next(key, value))
-    assert(value.toString == """{"bar": "foo"}""")
-    assert(reader.getPos == 28)
-    assert(reader.getProgress === 1.0)
-    assert(key.get == 14)
-    assert(value.getLength == 14)
-
-    assert(!reader.next(key, value))
-    assert(value.toString == "")
-    assert(reader.getProgress === 1.0)
-    reader.close()
+  override def close(): Unit = {
+    fileIn.close()
   }
 
-  "a file with three nested objects" should "return three records" in {
-    val conf = new Configuration()
-    val job = new JobConf(conf)
-
-    val testFileUrl = getClass.getResource("/complex-three.json")
-    val testFile = new File(testFileUrl.getFile)
-    val testFilePath = new Path(testFile.getAbsolutePath)
-    val testFileSize = testFile.length()
-
-    val hosts: Array[String] = null
-    val split = new FileSplit(testFilePath, 0, testFileSize, hosts)
-
-    val reader = new SingleJSONLineRecordReader(job, split)
-
-    val key = reader.createKey()
-    val value = reader.createValue()
-
-    assert(reader.next(key, value))
-    assert(value.toString == """{"payload":{"action":2,"data":{"cid":"19ade409-7278-4566-9b1f-989ab724f76a","startedAt":1528672255490,"device":"BROWSER","TA":"OK"},"video":11345,"progress":5654,"cid":"19ade409-7278-4566-9b1f-989ab724f76a"},"country":"US","town":"Sidney","clientIp":"75.186.76.212","realm":"dce.pbr","customerId":"qzbU","ts":"2018-06-11 00:25:54"}""")
-    assert(reader.getPos == 331)
-    assert(reader.getProgress === (331.0 / testFileSize).toFloat)
-    assert(key.get == 0)
-    assert(value.getLength == 331)
-
-    assert(reader.next(key, value))
-    assert(value.toString == """{"payload":{"action":2,"data":{"cid":"b55088a1-4530-4daf-a8e1-10e68486252e","startedAt":1528676388770,"device":"BROWSER","TA":"OK"},"video":11291,"progress":359,"cid":"b55088a1-4530-4daf-a8e1-10e68486252e"},"country":"FR","town":"ZZC","clientIp":"212.83.157.140","realm":"dce.fivb","customerId":"K.pM","ts":"2018-06-11 00:25:56"}""")
-    assert(reader.getPos == (331 + 329))
-    assert(reader.getProgress === ((331.0 + 329.0) / testFileSize).toFloat)
-    assert(key.get == 331)
-    assert(value.getLength == 329)
-
-    assert(reader.next(key, value))
-    assert(value.toString == """{"payload":{"action":2,"data":{"cid":"704c14a3-569b-4975-8ab6-3ebef320d6b0","startedAt":1528666440591,"device":"BROWSER","TA":"OK"},"video":11345,"progress":10315,"cid":"704c14a3-569b-4975-8ab6-3ebef320d6b0"},"country":"US","town":"Altus","clientIp":"160.3.57.114","realm":"dce.pbr","customerId":"f7bm","ts":"2018-06-11 00:25:58"}""")
-    assert(reader.getPos == (331 + 329 + 330 + 1/* LF */))
-    assert(reader.getProgress === ((331.0 + 329.0 + 330.0 + 1.0 /* LF */) / testFileSize).toFloat)
-    assert(key.get == (331 + 329))
-    assert(value.getLength == 330)
-
-    assert(!reader.next(key, value))
-    assert(value.toString == "")
-    assert(reader.getProgress === 1.0)
+  override def getProgress: Float = {
+    if (fileStart == fileFinish) {
+      0.0f
+    } else {
+      Math.min(1.0f, (filePosition - fileStart) / (fileFinish - fileStart).toFloat)
+    }
   }
 }
