@@ -9,53 +9,56 @@ import org.apache.spark.SparkConf
 import org.apache.hadoop.io._
 
 
-object Logins {
+object Logins extends Main {
   def main(args: Array[String]): Unit = {
-    
-    val spark = SparkSession.builder.appName("Analytics").getOrCreate()
-    val sc = spark.sparkContext
-    
     val parser = new scopt.OptionParser[Config]("scopt") {
       head(
         """Extract-Transform-Load (ETL) task for user_logins table
           |
           |Parses USER_SIGN_IN events from and inserts into user_logins table
-        """.stripMargin)
+        """.stripMargin
+        )
 
-      opt[String]('p', "path").action( (x, c) =>
-        c.copy(path = x) ).text("path to files")
-        }
+      opt[String]('p', "path")
+        .action((x, c) => c.copy(path = x) )
+        .text("path to files, local or remote")
+        .required()
 
-    var path: String = ""
-      parser.parse(args, Config()) match {
-        case Some(c) => path = c.path
-        case None => System.exit(1)
-      }
+      opt[Boolean]('d', "dry-run")
+        .action((x, c) => c.copy(dryRun = x) )
+        .text("dry run")
+    }
 
-    // Parse single-line multi-JSON object into single-line single JSON object
-     val rdd = sc.hadoopFile(path, classOf[SingleJSONLineInputFormat], classOf[LongWritable], classOf[Text])
-      .map(pair => pair._2.toString)
-      .setName(path)
-  
-    val df = spark.read
-      .schema(Schema.root)
-      .json(spark.createDataset(rdd)(Encoders.STRING))
-        
-//                         Table "public.user_logins"
-//   Column    |            Type             | Collation | Nullable | Default 
-//-------------+-----------------------------+-----------+----------+---------
-// customer_id | character varying(25)       |           |          | 
-// realm       | character varying(50)       |           |          | 
-// town        | character varying(100)      |           |          | 
-// country     | character varying(100)      |           |          | 
-// client_ip   | character varying(50)       |           |          | 
-// device      | character varying(50)       |           |          | 
-// ts          | timestamp without time zone |           |          | 
+    var cli: Config = Config()
+    parser.parse(args, cli) match {
+      case Some(c) => cli = c
+      case None => System.exit(1)
+    }
+
+    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    
+    val realms = spark
+      .read
+      .redshift(spark)
+      .option("dbtable", "realm")
+      .load()
+      
+//                    Table "public.user_logins"
+//       Column    |            Type             | Collation | Nullable | Default 
+//    -------------+-----------------------------+-----------+----------+---------
+//     customer_id | character varying(25)       |           |          | 
+//     realm       | character varying(50)       |           |          | 
+//     town        | character varying(100)      |           |          | 
+//     country     | character varying(100)      |           |          | 
+//     client_ip   | character varying(50)       |           |          | 
+//     type        | character varying(50)       |           |          | 
+//     device      | character varying(25)       |           |          | 
+//     ts          | timestamp without time zone |           |          | 
+//    COMPOUND SORTKEY(ts, realm, device, country)
 
     spark.sql("set spark.sql.caseSensitive=true")
       
-      
-    val logindf = df.where(col("payload.action") === Action.USER_SIGN_IN)
+    val logindf = events.where(col("payload.action") === Action.USER_SIGN_IN)
             .select(
               expr("realm"),
               col("customerId").alias("customer_id"),
@@ -65,17 +68,20 @@ object Logins {
               col("clientIp").alias("client_ip"),
               expr("payload.data.device as device")
             )
-    print("-----total------",df.count(),"-----logins------", logindf.count())
-    if (logindf.count()> 0){
-          logindf.write
-            .format("jdbc")
+            
+    print("-----total------"+events.count()+"-----logins------"+ logindf.count())
+    
+    if (!cli.dryRun) {
+       if (logindf.count()> 0){
+          logindf
+            .write
+            .redshift(spark)
             .mode(SaveMode.Append)
-            .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-            .option("url", spark.conf.get("spark.jdbc.url"))
-            .option("user", spark.conf.get("spark.jdbc.username"))
-            .option("password", spark.conf.get("spark.jdbc.password"))
             .option("dbtable", "user_logins")
             .save()
+       }
+    } else {
+      logindf.show()
     }
-  }
+ }
 }

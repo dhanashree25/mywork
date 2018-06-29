@@ -1,6 +1,5 @@
 import com.diceplatform.brain._
 import com.diceplatform.brain.implicits._
-
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql._
 import org.apache.spark.SparkContext
@@ -8,13 +7,8 @@ import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import org.apache.hadoop.io._
 
-
-object Signup {
+object Signup extends Main{
   def main(args: Array[String]): Unit = {
-    
-    val spark = SparkSession.builder.appName("Analytics").getOrCreate()
-    val sc = spark.sparkContext
-    
     val parser = new scopt.OptionParser[Config]("scopt") {
       head(
         """Extract-Transform-Load (ETL) task for signup table
@@ -22,38 +16,44 @@ object Signup {
           |Parses REGISTER_USER events from and inserts into signups table
         """.stripMargin)
 
-      opt[String]('p', "path").action( (x, c) =>
-        c.copy(path = x) ).text("path to files")
-        }
+      opt[String]('p', "path")
+        .action((x, c) => c.copy(path = x) )
+        .text("path to files, local or remote")
+        .required()
 
-    var path: String = ""
-      parser.parse(args, Config()) match {
-        case Some(c) => path = c.path
-        case None => System.exit(1)
-      }
+      opt[Boolean]('d', "dry-run")
+        .action((x, c) => c.copy(dryRun = x) )
+        .text("dry run")
+    }
 
-    // Parse single-line multi-JSON object into single-line single JSON object
-     val rdd = sc.hadoopFile(path, classOf[SingleJSONLineInputFormat], classOf[LongWritable], classOf[Text])
-      .map(pair => pair._2.toString)
-      .setName(path)
-  
-    val df = spark.read
-      .schema(Schema.root)
-      .json(spark.createDataset(rdd)(Encoders.STRING))
+    var cli: Config = Config()
+    parser.parse(args, cli) match {
+      case Some(c) => cli = c
+      case None => System.exit(1)
+    }
+
+    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    
+    val realms = spark
+      .read
+      .redshift(spark)
+      .option("dbtable", "realm")
+      .load()
         
 //                               Table "public.signups"
-//   Column    |            Type             | Collation | Nullable | Default 
-//-------------+-----------------------------+-----------+----------+---------
-// customer_id | character varying(20)       |           |          | 
-// realm       | character varying(50)       |           |          | 
-// town        | character varying(50)       |           |          | 
-// country     | character varying(50)       |           |          | 
-// ts          | timestamp without time zone |           |          | 
-// device      | character varying(20)       |           |          | 
+//       Column    |            Type             | Collation | Nullable | Default 
+//    -------------+-----------------------------+-----------+----------+---------
+//     customer_id | character varying(25)       |           |          | 
+//     realm       | character varying(50)       |           |          | 
+//     town        | character varying(100)      |           |          | 
+//     country     | character varying(100)      |           |          | 
+//     ts          | timestamp without time zone |           |          | 
+//     device      | character varying(25)       |           |          | 
+//     COMPOUND SORTKEY(ts, realm, device, country)
+
+    
     spark.sql("set spark.sql.caseSensitive=true")
-      
-      
-    val signupdf = df.where(col("payload.data.TA") === ActionType.REGISTER_USER)
+    val signupdf = events.where(col("payload.data.TA") === ActionType.REGISTER_USER)
             .select(
               expr("realm"),
               col("customerId").alias("customer_id"),
@@ -62,17 +62,21 @@ object Signup {
               col("ts"),
               expr("payload.data.device as device")
             )
-    print("-----total------",df.count(),"-----signups------", signupdf.count())
-    if (signupdf.count()> 0){
-          signupdf.write
-            .format("jdbc")
+            
+    print("-----total------"+events.count()+"-----signups------"+ signupdf.count())
+    
+    if (!cli.dryRun) {
+      if (signupdf.count()> 0){
+          print("Writing to table")
+          signupdf
+            .write
+            .redshift(spark)
             .mode(SaveMode.Append)
-            .option("driver", spark.conf.get("spark.jdbc.driver", "com.amazon.redshift.jdbc.Driver"))
-            .option("url", spark.conf.get("spark.jdbc.url"))
-            .option("user", spark.conf.get("spark.jdbc.username"))
-            .option("password", spark.conf.get("spark.jdbc.password"))
             .option("dbtable", "signups")
             .save()
+      }
+    } else {
+      signupdf.show()
     }
-  }
+ }
 }

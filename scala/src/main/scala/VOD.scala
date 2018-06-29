@@ -90,6 +90,8 @@ object VOD extends Main {
         col("ts").alias("updated_at")
       )
 
+    print("-----total------",events.count(),"-----vod------", updates.count())
+    
     if (!cli.dryRun) {
           updates
             .write
@@ -97,6 +99,7 @@ object VOD extends Main {
             .option("dbtable", "catalogue")
             .mode(SaveMode.Append)
             .save()
+     
     } else {
       updates.show()
     }

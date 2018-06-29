@@ -5,11 +5,9 @@ import org.apache.hadoop.mapred._
 import org.apache.hadoop.io._
 
 class SingleJSONLineRecordReader(job: Configuration, split: FileSplit) extends RecordReader[LongWritable, Text] {
-<<<<<<< HEAD
-=======
+
   val BUFFER_SIZE = "com.diceplatform.brain.input.singlejsonlinerecordreader.buffer.size"
 
->>>>>>> release_candidate
   private val fileStart = split.getStart
   private val fileFinish = fileStart + split.getLength
   private var filePosition = fileStart
@@ -17,11 +15,7 @@ class SingleJSONLineRecordReader(job: Configuration, split: FileSplit) extends R
   private val file = split.getPath
   private val fileIn = file.getFileSystem(job).open(file)
 
-<<<<<<< HEAD
-  private val buffer = new Array[Byte](10)
-=======
   private val buffer = new Array[Byte](job.getInt(BUFFER_SIZE, 1024 * 1024)) // 1 MB
->>>>>>> release_candidate
   private var bufferLength = 0
   private var bufferPosition = 0
 
