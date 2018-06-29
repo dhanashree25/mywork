@@ -71,8 +71,6 @@ object implicits {
     def dropNested(colName: String): DataFrame = {
       implicits.dropNested(df, colName)
     }
-
-    def normalize(): DataFrame = Normalize.transform(df)
   }
 
   private val JDBC_CONF_DRIVER_KEY = "spark.jdbc.driver"
