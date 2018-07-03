@@ -7,5 +7,5 @@ create table "public"."signups"(
 	device varchar(25),
     foreign key(realm_id) references realm(realm_id),
     foreign key(country) references country(alpha_2)
-	) 
+) 
 	COMPOUND SORTKEY(ts, realm_id, device, country);
