@@ -59,7 +59,6 @@ object LiveStream extends Main {
     //  updated_at                | timestamp without time zone |           | not null |
     //
     val df = events.where(col("payload.data.ta") === ActionType.LIVESTREAMING_EVENT_UPDATED)
-
     val updates = df
       .join(realms, df.col("realm") === realms.col("name"))
       .select(
@@ -78,6 +77,8 @@ object LiveStream extends Main {
         col("payload.data.v.endDate").alias("finish_at"),
         col("payload.data.v.updatedAt").alias("updated_at") // What about "ts"?
       )
+     
+    print("-----total------",events.count(),"-----livestream------", updates.count())
 
     if (!cli.dryRun) {
       updates

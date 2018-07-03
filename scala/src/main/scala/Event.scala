@@ -52,7 +52,9 @@ object Event extends Main {
     val df = events.where(col("payload.data.ta").isin(ActionType.EVENT_WENT_LIVE, ActionType.EVENT_WENT_NOTLIVE))
 
     val updates = df.join(realms, df.col("realm") === realms.col("name"))
-
+    
+    print("-----total------",events.count(),"-----updates------", updates.count())
+    
     if (!cli.dryRun) {
          updates
             .where(col("payload.data.ta") === ActionType.EVENT_WENT_LIVE)
