@@ -92,6 +92,7 @@ object VOD extends Main {
       )
 
     val updates_count=  updates.count()
+    
     print("-----total------",events_count,"-----vod------", updates_count)
     
     if (!cli.dryRun) {

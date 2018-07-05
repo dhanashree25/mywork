@@ -32,7 +32,7 @@ object Event extends Main {
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
-    val event_count = events.count()
+    val events_count = events.count()
     // TODO: Add support for stream events
 
     val realms = spark
@@ -54,8 +54,8 @@ object Event extends Main {
 
     val updates = df.join(realms, df.col("realm") === realms.col("name"))
     
-    val updates_count=  updates.count()
-    print("-----total------",events_count,"-----vod------", updates_count)
+    val updates_count =  updates.count()
+    print("-----total------",events_count,"-----events------", updates_count)
     
     if (!cli.dryRun) {
          updates
