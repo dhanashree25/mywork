@@ -34,7 +34,7 @@ object Signup extends Main{
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
     
-    events.show()
+    val event_count = events.count()
     
     val realms = spark
       .read
@@ -62,11 +62,12 @@ object Signup extends Main{
               col("ts"),
               col("payload.data.device").alias("device")
             )
-
-    print("-----total------"+events.count()+"-----signups------"+ signupdf.count())
+    val signupdf_count=  signupdf.count()
+            
+    print("-----total------"+event_count+"-----signups------"+ signupdf_count)
     
     if (!cli.dryRun) {
-      if (signupdf.count()> 0){
+      if (signupdf_count> 0){
           print("Writing to table")
           signupdf
             .write

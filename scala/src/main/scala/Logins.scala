@@ -37,6 +37,8 @@ object Logins extends Main {
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
     
+    val event_count = events.count()
+    
     val realms = spark
       .read
       .redshift(spark)
@@ -70,10 +72,12 @@ object Logins extends Main {
               col("payload.data.device").alias("device")
             )
             
-    print("-----total------"+events.count()+"-----logins------"+ logindf.count())
+    val login_count = logindf.count()
+            
+    print("-----total------"+event_count+"-----logins------"+ login_count)
     
     if (!cli.dryRun) {
-       if (logindf.count()> 0){
+       if (login_count> 0){
           logindf
             .write
             .redshift(spark)
