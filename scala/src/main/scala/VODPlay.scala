@@ -29,8 +29,8 @@ object VoDPlay extends Main {
       case None => System.exit(1)
     }
 
-    val events = spark.read.jsonSingleLine(spark, "s3a://dce-tracking/prod/2018/04/01/00/*", Schema.vodplay)
-
+    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    
     // TODO: Add support for stream events
 
     //
@@ -63,41 +63,14 @@ object VoDPlay extends Main {
       town        | character varying(1024)     |           | not null |
 
       */
-
-    /**
-      * {
-      * "payload": {
-      *   "action": 2,
-      *   "data": {
-      *     "cid": "0f3360bagf17da",
-      *     "startedAt": 1525162096616,
-      *     "device": "ANDROID_PHONE",
-      *     "TA": "OK"
-      *   },
-      *   "video": 10182,
-      *   "progress": 2703,
-      *   "cid": "0f3360bagf17da"
-      * },
-      * "country": "US",
-      * "town": "Bozeman",
-      * "clientIp": "174.45.109.251",
-      * "realm": "dce.pbr",
-      * "customerId": "fTX_",
-      * "ts": "2018-05-01 16:14:00"
-      * }
-      */
-
     val df = events.where(col("payload.action") === Action.VOD_PROGRESS)
-
-
+   
     val newSessions = events
       .where(col("payload.action") === Action.VOD_PROGRESS)
       .select(collect_set(col("payload.cid")).as("session_ids"))
       .first()
       .getList[String](0)
       .toArray()
-     
-    print(newSessions)
 
     val plays = spark.read.redshift(spark)
       .option("dbtable", "vod_play")
@@ -115,8 +88,8 @@ object VoDPlay extends Main {
         to_timestamp(col("payload.data.startedAt") / 1000).alias("started_at"),
         col("ts").alias("start_at"),
         col("ts").alias("end_at"),
-        col("town"),
-        col("country")
+        col("country"),
+        col("town")
       )
       .union(plays)
       .groupBy(
@@ -131,8 +104,9 @@ object VoDPlay extends Main {
         max("start_at").alias("start_at"),
         min("end_at").alias("end_at")
       )
-
+    print(updates.count())
     if (!cli.dryRun) {
+          print("Writing to table") 
           updates
             .write
             .redshift(spark)

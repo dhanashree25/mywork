@@ -32,7 +32,7 @@ object Schema {
     StructField("TA", StringType, nullable=true),
     StructField("cid", StringType, nullable=true),
     StructField("device", StringType, nullable=true),
-    StructField("startedAt", LongType, nullable=true),
+    StructField("startedAt", StringType, nullable=true),
     StructField("v", video, nullable=true),
     StructField("vid", IntegerType, nullable=true),
     StructField("DGE_EVENT_ID", IntegerType, nullable=true)
@@ -56,16 +56,4 @@ object Schema {
     StructField("ts", TimestampType, nullable=true)
   ))
   
-  val vodplay = StructType(List(
-    StructField("clientIp", StringType, nullable=true),
-    StructField("country", StringType, nullable=true),
-    StructField("customerId", StringType, nullable=true),
-    StructField("payload", payload, nullable=true),
-    StructField("realm", StringType, nullable=true),
-    StructField("town", StringType, nullable=true),
-    StructField("ts", TimestampType, nullable=true),
-    StructField("cid", StringType, nullable=true),
-    StructField("device", StringType, nullable=true),
-    StructField("startedAt", LongType, nullable=true)
-  ))
 }
