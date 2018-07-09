@@ -36,6 +36,7 @@ object VOD extends Main {
     val events = spark.read
         .jsonSingleLine(spark, cli.path, Schema.root)
 
+    val events_count = events.count()
     // TODO: Add support for stream events
 
     //
@@ -90,7 +91,9 @@ object VOD extends Main {
         col("ts").alias("updated_at")
       )
 
-    print("-----total------",events.count(),"-----vod------", updates.count())
+    val updates_count=  updates.count()
+    
+    print("-----total------",events_count,"-----vod------", updates_count)
     
     if (!cli.dryRun) {
           updates

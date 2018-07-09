@@ -31,7 +31,8 @@ object LiveStream extends Main {
     }
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
-
+    
+    val events_count = events.count()
     // TODO: Add support for stream events
     val realms = spark
       .read
@@ -78,7 +79,9 @@ object LiveStream extends Main {
         col("payload.data.v.updatedAt").alias("updated_at") // What about "ts"?
       )
      
-    print("-----total------",events.count(),"-----livestream------", updates.count())
+    val updates_count=  updates.count()
+    
+    print("-----total------",events_count,"-----live------", updates_count)
 
     if (!cli.dryRun) {
       updates

@@ -32,7 +32,7 @@ object Schema {
     StructField("TA", StringType, nullable=true),
     StructField("cid", StringType, nullable=true),
     StructField("device", StringType, nullable=true),
-    StructField("startedAt", LongType, nullable=true),
+    StructField("startedAt", StringType, nullable=true),
     StructField("v", video, nullable=true),
     StructField("vid", IntegerType, nullable=true),
     StructField("DGE_EVENT_ID", IntegerType, nullable=true)
@@ -55,4 +55,5 @@ object Schema {
     StructField("town", StringType, nullable=true),
     StructField("ts", TimestampType, nullable=true)
   ))
+  
 }
