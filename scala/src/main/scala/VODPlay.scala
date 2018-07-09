@@ -97,12 +97,14 @@ object VoDPlay extends Main {
         col("session_id"), // TODO: Consider removing
         col("customer_id"),
         col("video_id"),
-        col("started_at")
+        col("started_at"),
+        col("country"),
+        col("town")
       )
       .agg(
         max("duration").alias("duration"),
-        max("start_at").alias("start_at"),
-        min("end_at").alias("end_at")
+        min("start_at").alias("start_at"),
+        max("end_at").alias("end_at")
       )
     print(updates.count())
     if (!cli.dryRun) {
