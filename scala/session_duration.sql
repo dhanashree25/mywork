@@ -9,6 +9,6 @@ create table session_duration(
 	country char(2),
 	town varchar(256),
 	foreign key(realm_id) references realm(realm_id),
-    foreign key(country) references country(alpha_2)
+	foreign key(country) references country(alpha_2)
 	)
 	COMPOUND SORTKEY(realm_id, session_id, customer_id);
