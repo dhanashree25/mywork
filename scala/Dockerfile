@@ -14,5 +14,3 @@ COPY . /src/
 
 CMD ./emr-load-dce-jobs.sh
 
- #ENTRYPOINT ["sh"]
-

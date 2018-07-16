@@ -9,7 +9,7 @@ aws s3 cp s3://test-dce-spark/ . --recursive --exclude "*" --include "jar"
 #aws s3 cp s3://test-dce-spark/emr-load-dce-jobs.sh .
 
 #if [ -z '$var_date+x' ];then
-var_date=$(psql -t -c "select max(start_at)::DATE from live_play;" | tr -d ' ')
+var_date=$(psql -t -c "select to_char(max(start_at), 'YYYY/mm/dd')  from live_play;" | tr -d ' ')
 #fi
 #var_date=$(date -d '-1 day' '+%Y/%d/%m')
 echo $var_date
