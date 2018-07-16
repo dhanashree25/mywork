@@ -1,0 +1,154 @@
+[ 
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_events",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "Event",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key 'dce-spark-jobs/aws/access_key' }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key 'dce-spark-jobs/aws/secret_key' }}",
+        "--conf=spark.jdbc.url=jdbc:postgresql://{{ key 'dce-spark-jobs/redshift/host'}}:{{ key 'dce-spark-jobs/redshift/port' }}/redshift",
+        "--conf=spark.jdbc.username={{ key 'dce-spark-jobs/redshift/username' }}",
+        "--conf=spark.jdbc.password={{ key 'dce-spark-jobs/redshift/password' }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0",
+        "s3://test-dce-spark/analytics_2.11-0.1.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+        ]
+  },
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_vod_catalogue",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "VOD",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key 'dce-spark-jobs/aws/access_key' }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key 'dce-spark-jobs/aws/secret_key' }}",
+        "--conf=spark.jdbc.url=jdbc:postgresql://{{ key 'dce-spark-jobs/redshift/host'}}:{{ key 'dce-spark-jobs/redshift/port' }}/redshift",
+        "--conf=spark.jdbc.username={{ key 'dce-spark-jobs/redshift/username' }}",
+        "--conf=spark.jdbc.password={{ key 'dce-spark-jobs/redshift/password' }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0",
+        "s3://test-dce-spark/analytics_2.11-0.1.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+        ]
+  },
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_live_catalogue",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "LiveStream",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key 'dce-spark-jobs/aws/access_key' }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key 'dce-spark-jobs/aws/secret_key' }}",
+        "--conf=spark.jdbc.url=jdbc:postgresql://{{ key 'dce-spark-jobs/redshift/host'}}:{{ key 'dce-spark-jobs/redshift/port' }}/redshift",
+        "--conf=spark.jdbc.username={{ key 'dce-spark-jobs/redshift/username' }}",
+        "--conf=spark.jdbc.password={{ key 'dce-spark-jobs/redshift/password' }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0",
+        "s3://test-dce-spark/analytics_2.11-0.1.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+        ]
+  },
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_logins",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "Logins",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key 'dce-spark-jobs/aws/access_key' }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key 'dce-spark-jobs/aws/secret_key' }}",
+        "--conf=spark.jdbc.url=jdbc:postgresql://{{ key 'dce-spark-jobs/redshift/host'}}:{{ key 'dce-spark-jobs/redshift/port' }}/redshift",
+        "--conf=spark.jdbc.username={{ key 'dce-spark-jobs/redshift/username' }}",
+        "--conf=spark.jdbc.password={{ key 'dce-spark-jobs/redshift/password' }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0",
+        "s3://test-dce-spark/analytics_2.11-0.1.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+        ]
+  },
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_signups",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "Signup",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key 'dce-spark-jobs/aws/access_key' }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key 'dce-spark-jobs/aws/secret_key' }}",
+        "--conf=spark.jdbc.url=jdbc:postgresql://{{ key 'dce-spark-jobs/redshift/host'}}:{{ key 'dce-spark-jobs/redshift/port' }}/redshift",
+        "--conf=spark.jdbc.username={{ key 'dce-spark-jobs/redshift/username' }}",
+        "--conf=spark.jdbc.password={{ key 'dce-spark-jobs/redshift/password' }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0",
+        "s3://test-dce-spark/analytics_2.11-0.1.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+        ]
+  },
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_vod_plays",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "VoDPlay",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key 'dce-spark-jobs/aws/access_key' }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key 'dce-spark-jobs/aws/secret_key' }}",
+        "--conf=spark.jdbc.url=jdbc:postgresql://{{ key 'dce-spark-jobs/redshift/host'}}:{{ key 'dce-spark-jobs/redshift/port' }}/redshift",
+        "--conf=spark.jdbc.username={{ key 'dce-spark-jobs/redshift/username' }}",
+        "--conf=spark.jdbc.password={{ key 'dce-spark-jobs/redshift/password' }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0",
+        "s3://test-dce-spark/analytics_2.11-0.1.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+        ]
+  },
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_live_plays",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "LivePlay",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key 'dce-spark-jobs/aws/access_key' }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key 'dce-spark-jobs/aws/secret_key' }}",
+        "--conf=spark.jdbc.url=jdbc:postgresql://{{ key 'dce-spark-jobs/redshift/host'}}:{{ key 'dce-spark-jobs/redshift/port' }}/redshift",
+        "--conf=spark.jdbc.username={{ key 'dce-spark-jobs/redshift/username' }}",
+        "--conf=spark.jdbc.password={{ key 'dce-spark-jobs/redshift/password' }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0",
+        "s3://test-dce-spark/analytics_2.11-0.1.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+        ]
+  },
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_session_duration",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "SessionDuration",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key 'dce-spark-jobs/aws/access_key' }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key 'dce-spark-jobs/aws/secret_key' }}",
+        "--conf=spark.jdbc.url=jdbc:postgresql://{{ key 'dce-spark-jobs/redshift/host'}}:{{ key 'dce-spark-jobs/redshift/port' }}/redshift",
+        "--conf=spark.jdbc.username={{ key 'dce-spark-jobs/redshift/username' }}",
+        "--conf=spark.jdbc.password={{ key 'dce-spark-jobs/redshift/password' }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0",
+        "s3://test-dce-spark/analytics_2.11-0.1.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+        ]
+  }
+]
