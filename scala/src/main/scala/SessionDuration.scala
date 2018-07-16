@@ -51,13 +51,12 @@ object SessionDuration extends Main {
       .load()
 
     /**
-                               Table "public.vod_play"
+                               Table "public.session_duration"
         Column    |            Type             | Collation | Nullable | Default
      -------------+-----------------------------+-----------+----------+---------
       realm_id    | integer                     |           | not null |
       session_id  | character varying(64)       |           | not null |
       customer_id | character varying(32)       |           | not null |
-      video_id    | integer                     |           | not null |
       duration    | integer                     |           | not null |
       started_at  | timestamp without time zone |           | not null |
       start_at    | timestamp without time zone |           | not null |
