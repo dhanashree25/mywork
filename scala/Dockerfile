@@ -1,18 +1,14 @@
-# Dockerfile to build scala, sbt and jar file
+# Dockerfile to execute sh file and run spark jobs
 
-FROM openjdk:8
-RUN wget -O- "http://downloads.lightbend.com/scala/2.11.12/scala-2.11.12.tgz" \
-    | tar xzf - -C /usr/local --strip-components=1
-
-Run wget -O- "https://github.com/sbt/sbt/releases/download/v1.1.6/sbt-1.1.6.tgz" \
-    |  tar xzf - -C /usr/local --strip-components=1 \
-    && sbt exit
-
+FROM sdldevelopers/awstools
 VOLUME /src
 WORKDIR /src
 
+RUN  apt-get update \
+  && apt-get install -y wget \
+  && rm -rf /var/lib/apt/lists/*
+
 COPY . /src/
 
-ENTRYPOINT ["sbt"]
-CMD [ "package"]
+CMD ./emr-load-dce-jobs.sh
 
