@@ -9,6 +9,7 @@ RUN  apt-get update \
   && rm -rf /var/lib/apt/lists/*
 
 COPY . /src/
+COPY ./static/* /src/
 
 CMD ./emr-load-dce-jobs.sh
 
