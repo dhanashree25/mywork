@@ -41,6 +41,8 @@ for FILE in $FILES; do
   ./consul-template \
     -consul-ssl="${CONSUL_SECURE}" \
     -consul-addr="${CONSUL_HOST}:${CONSUL_PORT}" \
+    -consul-retry \
+    -consul-retry-attempts=3 \
     -once \
     -template="$FILE:$FILE.json" \
     -vault-renew-token=false \
