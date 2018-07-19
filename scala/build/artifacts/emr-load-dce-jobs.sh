@@ -47,6 +47,7 @@ for FILE in $FILES; do
     -consul-retry-attempts=3 \
     -once \
     -template="$FILE:$FILE.json" \
-    -vault-renew-token=false \
-    -exec "aws emr add-steps --region=${AWS_REGION} --cluster-id=${EMR_CLUSTER} --steps=file://$FILE.json"
+    -vault-renew-token=false
+
+  aws emr add-steps --region=${AWS_REGION} --cluster-id=${EMR_CLUSTER} --steps=file://$FILE.json
 done
