@@ -28,13 +28,6 @@ if [ -z "${CONSUL_SECURE-}" ]; then
   CONSUL_SECURE="true";
 fi
 
-consul_template_version=0.19.5
-consul_file="consul-template.zip"
-
-wget -O "${consul_file}" https://releases.hashicorp.com/consul-template/${consul_template_version}/consul-template_${consul_template_version}_linux_386.zip
-unzip -o "${consul_file}"
-rm -f "${consul_file}"
-
 FILES=$(find . -type f -iname "*.tmpl")
 
 var_version=$(cat version)
