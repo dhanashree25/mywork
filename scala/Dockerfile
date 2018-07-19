@@ -13,7 +13,7 @@ RUN wget -O "consul-template.zip" https://releases.hashicorp.com/consul-template
     rm -f "consul-template.zip"
 
 COPY . /src/
-COPY ./static/* /src/
+CMD mv ./static/* ./
 
 CMD ./emr-load-dce-jobs.sh
 
