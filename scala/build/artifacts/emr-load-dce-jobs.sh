@@ -3,7 +3,8 @@
 set -u -e -x
 
 if [ -z "${var_date-}" ]; then
-  var_date=$(psql --tuples-only --command="select to_char(max(start_at), 'YYYY/mm/dd')  from event;" | tr -d ' ')
+  var_date=$(psql --tuples-only --command="select to_char(max(start_at), 'YYYY/mm/dd') from event;" || false)
+  var_date=$(echo "${var_date}" | tr -d ' ')
 fi
 
 if [ -z "${var_date-}" ]; then
