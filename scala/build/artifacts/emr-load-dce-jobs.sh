@@ -45,5 +45,5 @@ for FILE in $FILES; do
     -template="$FILE:$FILE.json" \
     -vault-renew-token=false
 
-  aws emr add-steps --region=${AWS_REGION} --cluster-id=${EMR_CLUSTER} --steps=file://$FILE.json
+  aws emr add-steps --region=${AWS_REGION} --cluster-id=${EMR_CLUSTER} --steps=s3://dce-spark-jobs/$FILE.json
 done
