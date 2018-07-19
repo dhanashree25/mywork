@@ -1,20 +1,13 @@
 #!/bin/sh
 
-set -u -x
-CLUSTER=${STACK_NAME}-${PLATFORM}-spark-emr
-CLUSTER_ID=$(aws emr list-clusters --region=eu-west-1 --active | jq  -r '.[][] | select(.Name == "'${CLUSTER}'") | .Id')
+set -u -e -x
 
-aws s3 cp s3://test-dce-spark/ . --recursive --exclude "*" --include "jar"
-aws s3 cp s3://test-dce-spark/emr-load-dce-jobs.sh .
-aws s3 cp s3://test-dce-spark/step_jobs.tmpl .
-
-if [ -n ! "${var_date+set}"];then
-var_date=$(psql -t -c "select to_char(max(start_at), 'YYYY/mm/dd')  from event;" | tr -d ' ')
+if [ -z "${var_date-}" ]; then
+env
+  var_date=$(psql --tuples-only --command="select to_char(max(start_at), 'YYYY/mm/dd')  from event;" | tr -d ' ')
 fi
 
-echo $var_date
-
-sed -i "s@var_date@$var_date@g" step_jobs.tmpl
+echo "Processing date ${var_date}"
 
 HOST_IP=$(curl --connect-time 5 --max-time 5 --silent http://169.254.169.254/latest/meta-data/local-ipv4 || echo '')
 
@@ -31,22 +24,21 @@ if [ -z "${CONSUL_SECURE-}" ]; then
   CONSUL_SECURE="true";
 fi
 
-if [ -n ! "${consul_template_version+set}"];then
-   consul_template_version=0.19.5
-fi
-wget https://releases.hashicorp.com/consul-template/${consul_template_version}/consul-template_${consul_template_version}_linux_386.zip
+consul_template_version=0.19.5
 
-unzip consul-template_${consul_template_version}_linux_386.zip
+wget -O consul-template.zip https://releases.hashicorp.com/consul-template/${consul_template_version}/consul-template_${consul_template_version}_linux_386.zip
+unzip -o consul-template.zip
 
 FILES=$(find . -type f -iname "*.tmpl")
 
 for FILE in $FILES; do
+  sed -i "s@var_date@$var_date@g" "${FILE}"
+
   ./consul-template \
     -consul-ssl="${CONSUL_SECURE}" \
     -consul-addr="${CONSUL_HOST}:${CONSUL_PORT}" \
     -once \
     -template="$FILE:$FILE.json" \
     -vault-renew-token=false \
-    -exec "aws emr add-steps --region ${AWS_REGION} --cluster-id $CLUSTER_ID --steps file://$FILE.json"
+    -exec "aws emr add-steps --region=${AWS_REGION} --cluster-id=${EMR_CLUSTER} --steps=file://$FILE.json"
 done
-
