@@ -1,28 +1,18 @@
 import com.diceplatform.brain._
 import com.diceplatform.brain.implicits._
-import org.apache.hadoop.io._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 object Event extends Main {
   def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[Config]("scopt") {
-      head(
+    val parser = defaultParser
+
+    parser.head(
         """Extract-Transform-Load (ETL) task for events
           |
           |Parses EVENT_WENT_LIVE and EVENT_WENT_NOTLIVE events from JSON objects stored in files and appends to the event table
         """.stripMargin
       )
-
-      opt[String]('p', "path")
-        .action((x, c) => c.copy(path = x) )
-        .text("path to files, local or remote")
-        .required()
-
-      opt[Boolean]('d', "dry-run")
-        .action((x, c) => c.copy(dryRun = x) )
-        .text("dry run")
-    }
 
     var cli: Config = Config()
     parser.parse(args, cli) match {
@@ -34,12 +24,6 @@ object Event extends Main {
 
     val events_count = events.count()
     // TODO: Add support for stream events
-
-    val realms = spark
-      .read
-      .redshift(spark)
-      .option("dbtable", "realm")
-      .load()
 
     //
     //                 Table "public.event"
@@ -53,10 +37,10 @@ object Event extends Main {
     val df = events.where(col("payload.data.ta").isin(ActionType.EVENT_WENT_LIVE, ActionType.EVENT_WENT_NOTLIVE))
 
     val updates = df.join(realms, df.col("realm") === realms.col("name"))
-    
+
     val updates_count =  updates.count()
     print("-----total------",events_count,"-----events------", updates_count)
-    
+
     if (!cli.dryRun) {
          updates
             .where(col("payload.data.ta") === ActionType.EVENT_WENT_LIVE)
