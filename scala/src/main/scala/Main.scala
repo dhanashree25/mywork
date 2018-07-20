@@ -2,6 +2,7 @@ import org.apache.spark._
 import org.apache.spark.sql._
 import com.diceplatform.brain.implicits._
 
+case class Config(path: String = "", dryRun: Boolean = false)
 
 class Main {
   /**

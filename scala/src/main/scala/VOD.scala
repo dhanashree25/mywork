@@ -3,9 +3,6 @@ import com.diceplatform.brain.implicits._
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import org.apache.hadoop.io._
-
-case class Config(path: String = "", dryRun: Boolean = false)
 
 object VOD extends Main {
   def main(args: Array[String]): Unit = {
