@@ -36,7 +36,7 @@ for FILE in $FILES; do
   sed -i "s@var_date@$var_date@g" "${FILE}"
   sed -i "s@var_version@$var_version@g" "${FILE}"
 
-  ./consul-template \
+  consul-template \
     -consul-ssl="${CONSUL_SECURE}" \
     -consul-addr="${CONSUL_HOST}:${CONSUL_PORT}" \
     -consul-retry \
