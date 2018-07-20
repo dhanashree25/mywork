@@ -5,7 +5,7 @@ class Main {
   /**
     * Spark Session
     */
-  lazy val spark = {
+  lazy val spark: SparkSession = {
     val s = SparkSession.builder.appName("Analytics").getOrCreate()
     s.sparkContext.setLogLevel("ERROR")
     s.sql("set spark.sql.caseSensitive=true")
@@ -15,5 +15,6 @@ class Main {
   /**
     * Spark Context
     */
-  lazy val sc = spark.sparkContext
+  lazy val sc: SparkContext = spark.sparkContext
+
 }
