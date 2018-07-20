@@ -1,7 +1,6 @@
 # Dockerfile to execute sh file and run spark jobs
 
 FROM sdldevelopers/awstools
-VOLUME /src
 WORKDIR /src
 
 RUN  apt-get update \
@@ -13,7 +12,7 @@ RUN wget -O "consul-template.zip" https://releases.hashicorp.com/consul-template
     rm -f "consul-template.zip"
 
 COPY . /src/
-CMD mv /src/static/* /src/
+RUN mv /src/static/* /src/
 
 CMD ./emr-load-dce-jobs.sh
 
