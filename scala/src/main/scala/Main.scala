@@ -37,4 +37,17 @@ class Main {
       .option("dbtable", "realm")
       .load()
   }
+
+  lazy val defaultParser: scopt.OptionParser[Config] = {
+    new scopt.OptionParser[Config]("scopt") {
+      opt[String]('p', "path")
+        .action((x, c) => c.copy(path = x) )
+        .text("path to files, local or remote")
+        .required()
+
+      opt[Boolean]('d', "dryRun")
+        .action((x, c) => c.copy(dryRun = x) )
+        .text("dry run")
+    }
+  }
 }
