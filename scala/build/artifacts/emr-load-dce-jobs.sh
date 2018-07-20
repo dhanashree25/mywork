@@ -35,7 +35,6 @@ var_version=$(cat version)
 for FILE in $FILES; do
   sed -i "s@var_date@$var_date@g" "${FILE}"
   sed -i "s@var_version@$var_version@g" "${FILE}"
-  FILE=$(echo "${FILE}" | sed 's/\.\///g')
 
   consul-template \
     -consul-ssl="${CONSUL_SECURE}" \
@@ -46,5 +45,5 @@ for FILE in $FILES; do
     -template="$FILE:$FILE.json" \
     -vault-renew-token=false
 
-  aws emr add-steps --region=${AWS_REGION} --cluster-id=${EMR_CLUSTER} --steps=s3://dce-spark-jobs/$FILE.json
+  aws emr add-steps --region=${AWS_REGION} --cluster-id=${EMR_CLUSTER} --steps=file://$FILE.json
 done
