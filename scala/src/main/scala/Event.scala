@@ -8,11 +8,11 @@ object Event extends Main {
     val parser = defaultParser
 
     parser.head(
-        """Extract-Transform-Load (ETL) task for events
-          |
-          |Parses EVENT_WENT_LIVE and EVENT_WENT_NOTLIVE events from JSON objects stored in files and appends to the event table
-        """.stripMargin
-      )
+      """Extract-Transform-Load (ETL) task for events
+        |
+        |Parses EVENT_WENT_LIVE and EVENT_WENT_NOTLIVE events from JSON objects stored in files and appends to the event table
+      """.stripMargin
+    )
 
     var cli: Config = Config()
     parser.parse(args, cli) match {
@@ -41,27 +41,33 @@ object Event extends Main {
     val updates_count =  updates.count()
     print("-----total------",events_count,"-----events------", updates_count)
 
-    if (!cli.dryRun) {
-         updates
+    val updates_live =  updates
             .where(col("payload.data.ta") === ActionType.EVENT_WENT_LIVE)
             .select(
               col("payload.data.DGE_EVENT_ID").alias("event_id"),
               col("realm_id"),
               col("ts").alias("start_at")
             )
-            .write
-            .redshift(spark)
-            .mode(SaveMode.Append)
-            .option("dbtable", "event_start")
-            .save()
-
-      updates
+    val live_count = updates_live.count()
+    val updates_not_live =  updates
         .where(col("payload.data.ta") === ActionType.EVENT_WENT_NOTLIVE)
         .select(
           col("payload.data.DGE_EVENT_ID").alias("event_id"),
           col("realm_id"),
           col("ts").alias("finish_at")
         )
+    val notlive_count= updates_not_live.count()
+
+    print("-----total------",events_count,"-----live events------", live_count,"-----notlive events------", notlive_count)
+    if (!cli.dryRun) {
+     updates_live
+            .write
+            .redshift(spark)
+            .mode(SaveMode.Append)
+            .option("dbtable", "event_start")
+            .save()
+
+     updates_not_live
         .write
         .redshift(spark)
         .mode(SaveMode.Append)
