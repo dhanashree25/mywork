@@ -3,29 +3,17 @@ import com.diceplatform.brain.implicits._
 
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import org.apache.hadoop.io._
-
-case class Config(path: String = "", dryRun: Boolean = false)
 
 object VOD extends Main {
   def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[Config]("scopt") {
-      head(
-        """Extract-Transform-Load (ETL) task for video-on-demand (VOD) events
-          |
-          |Parses UPDATED_VOD and NEW_VOD_FROM_DVE events from JSON objects stored in files and appends to the catalogue table
-        """.stripMargin
-      )
+    val parser = defaultParser
 
-      opt[String]('p', "path")
-        .action((x, c) => c.copy(path = x) )
-        .text("path to files, local or remote")
-        .required()
-
-      opt[Boolean]('d', "dryRun")
-        .action((x, c) => c.copy(dryRun = x) )
-        .text("dry run")
-    }
+    parser.head(
+      """Extract-Transform-Load (ETL) task for video-on-demand (VOD) events
+        |
+        |Parses UPDATED_VOD and NEW_VOD_FROM_DVE events from JSON objects stored in files and appends to the catalogue table
+      """.stripMargin
+    )
 
     var cli: Config = Config()
     parser.parse(args, cli) match {
@@ -38,20 +26,6 @@ object VOD extends Main {
 
     val events_count = events.count()
     // TODO: Add support for stream events
-
-    //
-    //  Table "public.realm"
-    //   Column  |          Type          | Collation | Nullable | Default
-    //  ---------+------------------------+-----------+----------+---------
-    //  realm_id | integer                |           | not null |
-    //  name     | character varying(256) |           | not null |
-    //
-
-    val realms = spark
-      .read
-      .redshift(spark)
-      .option("dbtable", "realm")
-      .load()
 
    //
    //                             Table "public.catalogue"
@@ -92,9 +66,9 @@ object VOD extends Main {
       )
 
     val updates_count=  updates.count()
-    
+
     print("-----total------",events_count,"-----vod------", updates_count)
-    
+
     if (!cli.dryRun) {
           updates
             .write
@@ -102,7 +76,7 @@ object VOD extends Main {
             .option("dbtable", "vod_catalogue")
             .mode(SaveMode.Append)
             .save()
-     
+
     } else {
       updates.show()
     }
