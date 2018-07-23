@@ -53,7 +53,7 @@ object VoDDropoff extends Main {
             vod_play.col("realm_id"),
             vod_play.col("video_id"),
             vod_play.col("customer_id"),
-            vod_play.col("start_at").alias("start_at"),
+            vod_play.col("start_at"),
             year(col("start_at")).alias("year"),
             weekofyear(col("start_at")).alias("dow"),
             month(col("start_at")).alias("month"),
