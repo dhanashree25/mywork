@@ -91,7 +91,7 @@ object VODCatalogueCSV extends Main {
         .mode(SaveMode.Append)
         .save()
     } else {
-      df.show()
+      updates.show()
     }
   }
 }
