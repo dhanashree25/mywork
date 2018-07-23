@@ -5,38 +5,29 @@ import org.apache.spark.sql.functions._
 
 object VoDDropoff extends Main {
   def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[Config]("scopt") {
-      head(
+     val parser = defaultParser
+     
+     parser.head(
         """Extract-Transform-Load (ETL) task for calculating percentage video dropoffs
           |
           |Reads from vod_plays to calculate video_duration watched and appends to the vod_dropoff table
         """.stripMargin
-      )
-
-      opt[String]('p', "path")
-        .action((x, c) => c.copy(path = x) )
-        .text("path to files, local or remote")
-        .required()
-
-      opt[Boolean]('d', "dryRun")
-        .action((x, c) => c.copy(dryRun = x) )
-        .text("dry run")
-    }
+    )
 
     var cli: Config = Config()
     parser.parse(args, cli) match {
       case Some(c) => cli = c
       case None => System.exit(1)
     }
-    
-    val df = spark.read.redshift(spark)
-      .option("dbtable", "(select session_id, customer_id, realm_id, video_id, min(start_at) start_time, max(end_at) end_time, max(duration) progress from vod_play group by session_id, customer_id, realm_id, video_id)") 
+     
+    val vod_play = spark.read.redshift(spark)
+      .option("dbtable", "(select session_id, customer_id, realm_id, video_id, min(start_at) start_at, max(end_at) end_at, max(duration) progress from vod_play group by session_id, customer_id, realm_id, video_id)") 
       .load()
 
     val vod_catalogue = spark
       .read
       .redshift(spark)
-      .option("dbtable", "(select video_dve_id,max(duration) duration from vod_catalogue group by video_dve_id)")
+      .option("dbtable", "(select video_dve_id,max(duration) duration from vod_catalogue where duration >0  group by video_dve_id)")
       .load()
 
 //                              Table "public.vod_dropoff"
@@ -56,32 +47,30 @@ object VoDDropoff extends Main {
 //     perc_drop      | double precision            |           |          | 
 
 //     COMPOUND SORTKEY(realm_id, video_id, customer_id);
-    val updates = df.
-        join(vod_catalogue, df.col("video_id") === vod_catalogue.col("video_dve_id")) 
+    val updates = vod_play.
+        join(vod_catalogue, vod_play.col("video_id") === vod_catalogue.col("video_dve_id")) 
         .select(
-            df.col("realm_id"),
-            df.col("video_id"),
-            df.col("customer_id"),
-            df.col("start_time").alias("start_at"),
-            year(col("start_time")).alias("year"),
-            weekofyear(col("start_time")).alias("dow"),
-            month(col("start_time")).alias("month"),
-            dayofmonth(col("start_time")).alias("day"),
-            hour(col("start_time")).alias("hour"),
+            vod_play.col("realm_id"),
+            vod_play.col("video_id"),
+            vod_play.col("customer_id"),
+            vod_play.col("start_at").alias("start_at"),
+            year(col("start_at")).alias("year"),
+            weekofyear(col("start_at")).alias("dow"),
+            month(col("start_at")).alias("month"),
+            dayofmonth(col("start_at")).alias("day"),
+            hour(col("start_at")).alias("hour"),
             col("progress"),
             col("duration"),
             (col("progress")*100/col("duration") ).alias("perc_drop"))
-        .where(col("duration")=!= 0)
        
         if (!cli.dryRun) {
               print("Writing to table") 
-              
-          updates.write
-            .redshift(spark)
-            .option("dbtable", "vod_dropoff")
-            .mode(SaveMode.Overwrite)
-            .save()
-            print("done")
+              updates.write
+                  .redshift(spark)
+                  .option("dbtable", "vod_dropoff")
+                  .mode(SaveMode.Overwrite)
+                  .save()
+              print("done")
         } else {
           updates.show()
     }
