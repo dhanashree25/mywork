@@ -5,23 +5,13 @@ import org.apache.spark.sql.functions._
 
 object VoDPlay extends Main {
   def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[Config]("scopt") {
-      head(
-        """Extract-Transform-Load (ETL) task for calculating video-on-demand (VOD) plays
-          |
-          |Parses VOD_PROGRESS events from JSON objects stored in files and appends to the VOD play table
-        """.stripMargin
-      )
-
-      opt[String]('p', "path")
-        .action((x, c) => c.copy(path = x) )
-        .text("path to files, local or remote")
-        .required()
-
-      opt[Boolean]('d', "dryRun")
-        .action((x, c) => c.copy(dryRun = x) )
-        .text("dry run")
-    }
+    val parser = defaultParser
+    parser.head(
+      """Extract-Transform-Load (ETL) task for calculating video-on-demand (VOD) plays
+        |
+        |Parses VOD_PROGRESS events from JSON objects stored in files and appends to the VOD play table
+      """.stripMargin
+    )
 
     var cli: Config = Config()
     parser.parse(args, cli) match {
@@ -30,22 +20,8 @@ object VoDPlay extends Main {
     }
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
-    
+
     // TODO: Add support for stream events
-
-    //
-    //  Table "public.realm"
-    //   Column  |          Type          | Collation | Nullable | Default
-    //  ---------+------------------------+-----------+----------+---------
-    //  realm_id | integer                |           | not null |
-    //  name     | character varying(256) |           | not null |
-    //
-
-    val realms = spark
-      .read
-      .redshift(spark)
-      .option("dbtable", "realm")
-      .load()
 
     /**
                                Table "public.vod_play"
@@ -64,7 +40,7 @@ object VoDPlay extends Main {
 
       */
     val df = events.where(col("payload.action") === Action.VOD_PROGRESS)
-   
+
     val newSessions = events
       .where(col("payload.action") === Action.VOD_PROGRESS)
       .select(collect_set(col("payload.cid")).as("session_ids"))
@@ -108,7 +84,7 @@ object VoDPlay extends Main {
       )
     print(updates.count())
     if (!cli.dryRun) {
-          print("Writing to table") 
+          print("Writing to table")
           updates
             .write
             .redshift(spark)

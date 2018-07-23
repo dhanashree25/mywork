@@ -9,22 +9,14 @@ import org.apache.hadoop.io._
 
 object Signup extends Main{
   def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[Config]("scopt") {
-      head(
-        """Extract-Transform-Load (ETL) task for signup table
-          |
-          |Parses REGISTER_USER events from and inserts into signups table
-        """.stripMargin)
+    val parser = defaultParser
 
-      opt[String]('p', "path")
-        .action((x, c) => c.copy(path = x) )
-        .text("path to files, local or remote")
-        .required()
-
-      opt[Boolean]('d', "dry-run")
-        .action((x, c) => c.copy(dryRun = x) )
-        .text("dry run")
-    }
+    parser.head(
+      """Extract-Transform-Load (ETL) task for signup table
+        |
+        |Parses REGISTER_USER events from and inserts into signups table
+      """.stripMargin
+    )
 
     var cli: Config = Config()
     parser.parse(args, cli) match {
@@ -33,26 +25,20 @@ object Signup extends Main{
     }
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
-    
+
     val event_count = events.count()
-    
-    val realms = spark
-      .read
-      .redshift(spark)
-      .option("dbtable", "realm")
-      .load()
-        
+
 //                               Table "public.signups"
-//       Column    |            Type             | Collation | Nullable | Default 
+//       Column    |            Type             | Collation | Nullable | Default
 //    -------------+-----------------------------+-----------+----------+---------
-//     customer_id | character varying(25)       |           |          | 
-//     realm_id    | integer                     |           |          | 
-//     town        | character varying(100)      |           |          | 
-//     country     | character (2)               |           |          | 
-//     ts          | timestamp without time zone |           |          | 
-//     device      | character varying(25)       |           |          | 
+//     customer_id | character varying(25)       |           |          |
+//     realm_id    | integer                     |           |          |
+//     town        | character varying(100)      |           |          |
+//     country     | character (2)               |           |          |
+//     ts          | timestamp without time zone |           |          |
+//     device      | character varying(25)       |           |          |
 //     COMPOUND SORTKEY(ts, realm_id, device, country)
-    
+
     spark.sql("set spark.sql.caseSensitive=true")
     val signupdf = events.where(col("payload.data.TA") === ActionType.REGISTER_USER).join(realms, events.col("realm") === realms.col("name")).select(
               col("realm_id"),
@@ -63,9 +49,9 @@ object Signup extends Main{
               col("payload.data.device").alias("device")
             )
     val signupdf_count=  signupdf.count()
-            
+
     print("-----total------"+event_count+"-----signups------"+ signupdf_count)
-    
+
     if (!cli.dryRun) {
       if (signupdf_count> 0){
           print("Writing to table")

@@ -5,23 +5,14 @@ import org.apache.spark.sql.functions._
 
 object LivePlay extends Main {
   def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[Config]("scopt") {
-      head(
-        """Extract-Transform-Load (ETL) task for calculating Live video play
-          |
-          |Parses LIVE_ACTION from JSON objects stored in files and appends to the live_play table
-        """.stripMargin
-      )
+    val parser = defaultParser
 
-      opt[String]('p', "path")
-        .action((x, c) => c.copy(path = x) )
-        .text("path to files, local or remote")
-        .required()
-
-      opt[Boolean]('d', "dryRun")
-        .action((x, c) => c.copy(dryRun = x) )
-        .text("dry run")
-    }
+    parser.head(
+      """Extract-Transform-Load (ETL) task for calculating Live video play
+        |
+        |Parses LIVE_ACTION from JSON objects stored in files and appends to the live_play table
+      """.stripMargin
+    )
 
     var cli: Config = Config()
     parser.parse(args, cli) match {
@@ -30,22 +21,8 @@ object LivePlay extends Main {
     }
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
-    
-    // TODO: Add support for stream events
 
-    //
-    //  Table "public.realm"
-    //   Column  |          Type          | Collation | Nullable | Default
-    //  ---------+------------------------+-----------+----------+---------
-    //  realm_id | integer                |           | not null |
-    //  name     | character varying(256) |           | not null |
-    //
-    
-    val realms = spark
-      .read
-      .redshift(spark)
-      .option("dbtable", "realm")
-      .load()
+    // TODO: Add support for stream events
 
     /**
                                Table "public.vod_play"
@@ -62,10 +39,10 @@ object LivePlay extends Main {
       country     | character(2)                |           | not null |
       town        | character varying(1024)     |           | not null |
 
-      */ 
-      
+      */
+
     val df = events.where(col("payload.action") === Action.LIVE_WATCHING)
-    
+
     val newSessions = events
       .where(col("payload.action") === Action.VOD_PROGRESS)
       .select(collect_set(col("payload.cid")).as("session_ids"))
@@ -77,14 +54,14 @@ object LivePlay extends Main {
       .option("dbtable", "live_play")
       .load()
       .where(col("session_id").isin(newSessions:_*)) // this will need to be optimised
-    
+
     val live_updates = df
       .join(realms, df.col("realm") === realms.col("name"))
       .select(
         col("realm_id"),
         col("payload.cid").alias("session_id"),
-        col("customerId").alias("customer_id"),  
-        col("payload.video").alias("video_id"),  
+        col("customerId").alias("customer_id"),
+        col("payload.video").alias("video_id"),
         col("payload.data.device").alias( "device"),
         to_timestamp(col("payload.data.startedAt") / 1000).alias("started_at"),
         col("ts").alias("start_at"),
@@ -109,17 +86,17 @@ object LivePlay extends Main {
       .withColumn("duration",unix_timestamp(col("end_at"))-unix_timestamp(col("start_at")))
 
       val reorderedColumnNames: Array[String] = Array("realm_id",
-                                                 "session_id", 
+                                                 "session_id",
                                                  "customer_id",
                                                  "video_id",
-                                                 "device", 
-                                                 "duration", 
-                                                 "started_at",  
+                                                 "device",
+                                                 "duration",
+                                                 "started_at",
                                                  "start_at",
                                                  "end_at",
                                                  "country",
                                                  "town")
-                                                 
+
        val updates = live_updates.select(reorderedColumnNames.head, reorderedColumnNames.tail: _*).union(previousPlays)
       .groupBy(
         col("realm_id"),
@@ -136,10 +113,10 @@ object LivePlay extends Main {
         min("start_at").alias("start_at"),
         max("end_at").alias("end_at")
       )
-      
-    
+
+
     if (!cli.dryRun) {
-          print("Writing to table") 
+          print("Writing to table")
            updates
             .write
             .redshift(spark)
