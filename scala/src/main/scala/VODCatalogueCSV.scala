@@ -58,14 +58,12 @@ object VODCatalogueCSV extends Main {
       case None => System.exit(1)
     }
 
-    val df = spark.read
+    val catalogue = spark.read
       .option("header", value=true)
       .option("sep", value=cli.separator)
       .option("escape", value="\"")
       .schema(schema)
       .csv(cli.path)
-
-    val updates = df
       .select(
         col("vod_id").alias("video_id"),
         col("vod_dve_id").alias("video_dve_id"),
@@ -81,17 +79,17 @@ object VODCatalogueCSV extends Main {
         to_timestamp(lit("01-01-1970 00:00:00"), "MM-dd-yyyy HH:mm:ss").alias("updated_at") // Override updated at
       )
 
-    print("-----total------", df.count())
+    print("-----total------", catalogue.count())
 
     if (!cli.dryRun) {
-      updates
+      catalogue
         .write
         .redshift(spark)
         .option("dbtable", "vod_catalogue")
         .mode(SaveMode.Append)
         .save()
     } else {
-      updates.show()
+      catalogue.show()
     }
   }
 }
