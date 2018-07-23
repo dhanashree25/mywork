@@ -99,7 +99,7 @@ object VOD extends Main {
           updates
             .write
             .redshift(spark)
-            .option("dbtable", "catalogue")
+            .option("dbtable", "vod_catalogue")
             .mode(SaveMode.Append)
             .save()
      
