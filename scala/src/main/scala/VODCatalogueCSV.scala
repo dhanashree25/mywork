@@ -43,8 +43,8 @@ object VODCatalogueCSV extends Main {
         .action((x, c) => c.copy(dryRun = x) )
         .text("dry run, default is false")
 
-      opt[Boolean]('s', "separator")
-       .action((x, c) => c.copy(dryRun = x) )
+      opt[String]('s', "separator")
+       .action((x, c) => c.copy(separator = x) )
        .text("the separator between columns, default is ;")
 
       opt[Boolean]('h', "header")
