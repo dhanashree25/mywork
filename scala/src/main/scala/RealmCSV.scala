@@ -15,28 +15,11 @@ object RealmCSV extends Main {
 
 
   def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[RealmCSVConfig]("scopt") {
-      head("Extract-Transform-Load (ETL) task for realms stored in CSV")
+    val parser = csvParser
 
-      opt[String]('p', "path")
-        .action((x, c) => c.copy(path = x) )
-        .text("path to files, local or remote")
-        .required()
+    parser.head("Extract-Transform-Load (ETL) task for realms stored in CSV")
 
-      opt[Boolean]('d', "dry-run")
-        .action((x, c) => c.copy(dryRun = x) )
-        .text("dry run, default is false")
-
-      opt[String]('s', "separator")
-       .action((x, c) => c.copy(separator = x) )
-       .text("the separator between columns, default is ,")
-
-      opt[Boolean]('h', "header")
-        .action((x, c) => c.copy(header = x) )
-        .text("whether to use the header (first line) as column names, default is true")
-    }
-
-    var cli: RealmCSVConfig = RealmCSVConfig()
+    var cli: CSVConfig = CSVConfig()
     parser.parse(args, cli) match {
       case Some(c) => cli = c
       case None => System.exit(1)

@@ -3,6 +3,7 @@ import org.apache.spark.sql._
 import com.diceplatform.brain.implicits._
 
 case class Config(path: String = "", dryRun: Boolean = false)
+case class CSVConfig(path: String = "", dryRun: Boolean = false, separator: String = ",", header:Boolean = true)
 
 class Main {
   /**
@@ -30,7 +31,6 @@ class Main {
     *  name     | character varying(256) |           | not null |
     */
   lazy val realms: DataFrame = {
-
     spark
       .read
       .redshift(spark)
@@ -48,6 +48,27 @@ class Main {
       opt[Boolean]('d', "dryRun")
         .action((x, c) => c.copy(dryRun = x) )
         .text("dry run")
+    }
+  }
+
+  lazy val csvParser: scopt.OptionParser[CSVConfig] = {
+    new scopt.OptionParser[CSVConfig]("scopt") {
+      opt[String]('p', "path")
+        .action((x, c) => c.copy(path = x) )
+        .text("path to files, local or remote")
+        .required()
+
+      opt[Boolean]('d', "dry-run")
+        .action((x, c) => c.copy(dryRun = x) )
+        .text("dry run, default is false")
+
+      opt[String]('s', "separator")
+        .action((x, c) => c.copy(separator = x) )
+        .text("the separator between columns, default is ,")
+
+      opt[Boolean]('h', "header")
+        .action((x, c) => c.copy(header = x) )
+        .text("whether to use the header (first line) as column names, default is true")
     }
   }
 }
