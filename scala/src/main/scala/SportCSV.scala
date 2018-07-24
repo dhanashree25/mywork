@@ -5,7 +5,7 @@ import org.apache.spark.sql.types._
 object SportCSV extends Main {
   val schema = StructType(
     Array(
-      StructField("sport_id", StringType, nullable=false),
+      StructField("sport_id", IntegerType, nullable=false),
       StructField("name", StringType, nullable=false)
     )
   )

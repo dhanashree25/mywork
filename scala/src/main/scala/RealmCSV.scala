@@ -8,7 +8,7 @@ case class RealmCSVConfig(path: String = "", dryRun: Boolean = false, separator:
 object RealmCSV extends Main {
   val schema = StructType(
     Array(
-      StructField("realm_id", StringType, nullable=false),
+      StructField("realm_id", IntegerType, nullable=false),
       StructField("name", StringType, nullable=false)
     )
   )
