@@ -26,9 +26,7 @@ object VODCatalogueCSV extends Main {
   def main(args: Array[String]): Unit = {
     val parser = new scopt.OptionParser[VODCatalogueCSVConfig]("scopt") {
       head(
-        """Extract-Transform-Load (ETL) task for video-on-demand (VOD) events stored in CSV
-
-          The CSV is expected to have a header, with double quotes for the values, and semi-colon for the separator.
+        """Extract-Transform-Load (ETL) task for video-on-demand (VOD) catalogue stored in CSV
 
           If new lines are within a column value, they must be escaped as \n
           If double quotes are within a column value, they must be escaped as ""
