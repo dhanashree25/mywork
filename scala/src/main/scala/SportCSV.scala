@@ -36,7 +36,7 @@ object SportCSV extends Main {
         .write
         .redshift(spark)
         .option("dbtable", "sport")
-        .mode(SaveMode.Overwrite)
+        .mode(SaveMode.Append)
         .save()
     } else {
       realms.show()

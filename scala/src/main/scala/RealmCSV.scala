@@ -39,7 +39,7 @@ object RealmCSV extends Main {
         .write
         .redshift(spark)
         .option("dbtable", "realm")
-        .mode(SaveMode.Overwrite)
+        .mode(SaveMode.Append)
         .save()
     } else {
       realms.show()
