@@ -22,24 +22,24 @@ object SportCSV extends Main {
       case None => System.exit(1)
     }
 
-    val realms = spark.read
+    val sports = spark.read
       .option("header", value=cli.header)
       .option("sep", value=cli.separator)
       .option("escape", value="\"")
       .schema(schema)
       .csv(cli.path)
 
-    print("-----total------", realms.count())
+    print("-----total------", sports.count())
 
     if (!cli.dryRun) {
-      realms
+      sports
         .write
         .redshift(spark)
         .option("dbtable", "sport")
         .mode(SaveMode.Append)
         .save()
     } else {
-      realms.show()
+      sports.show()
     }
   }
 }
