@@ -3,7 +3,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.types._
 import org.apache.spark.sql.functions._
 
-case class VODCatalogueCSVConfig(path: String = "", dryRun: Boolean = false, separator: String = ";", header:Boolean = true)
+case class VODCatalogueCSVConfig(path: String = "", dryRun: Boolean = false, separator: String = ",", header:Boolean = true)
 
 object VODCatalogueCSV extends Main {
   val schema = StructType(
@@ -43,7 +43,7 @@ object VODCatalogueCSV extends Main {
 
       opt[String]('s', "separator")
        .action((x, c) => c.copy(separator = x) )
-       .text("the separator between columns, default is ;")
+       .text("the separator between columns, default is ,")
 
       opt[Boolean]('h', "header")
         .action((x, c) => c.copy(header = x) )
