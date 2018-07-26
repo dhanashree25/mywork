@@ -35,7 +35,10 @@ object Schema {
     StructField("startedAt", StringType, nullable=true),
     StructField("v", video, nullable=true),
     StructField("vid", IntegerType, nullable=true),
-    StructField("DGE_EVENT_ID", IntegerType, nullable=true)
+    StructField("DGE_EVENT_ID", IntegerType, nullable=true),
+    StructField("PAYMENT_PROVIDER", StringType, nullable=true),
+    StructField("PRICE_WITH_TAX_AMOUNT", FloatType, nullable=true),
+    StructField("PRICE_WITH_TAX_CURRENCY", StringType, nullable=true)   
   ))
 
   val payload = StructType(List(
