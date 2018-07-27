@@ -47,6 +47,7 @@ class Main {
 
       opt[Boolean]('d', "dry-run")
         .action((x, c) => c.copy(dryRun = x) )
+        .optional()
         .text("dry run")
     }
   }
