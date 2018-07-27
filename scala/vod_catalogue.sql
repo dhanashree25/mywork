@@ -10,5 +10,6 @@ CREATE TABLE "public"."vod_catalogue" (
     "draft" BOOLEAN NOT NULL,
     "tags" VARCHAR(1024),
     "imported_at" TIMESTAMP,
-    "updated_at" TIMESTAMP
+    "updated_at" TIMESTAMP,
+    FOREIGN KEY(realm_id) REFERENCES realm(realm_id)
 ) COMPOUND SORTKEY(realm_id, updated_at, deleted, draft);

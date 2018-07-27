@@ -12,4 +12,5 @@ CREATE TABLE "public"."live_catalogue" (
     "start_at" TIMESTAMP,
     "finish_at" TIMESTAMP,
     "updated_at" TIMESTAMP,
+    FOREIGN KEY(realm_id) REFERENCES realm(realm_id)
 ) COMPOUND SORTKEY(realm_id, updated_at, deleted);
