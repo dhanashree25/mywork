@@ -45,7 +45,7 @@ class Main {
         .text("path to files, local or remote")
         .required()
 
-      opt[Boolean]('d', "dryRun")
+      opt[Boolean]('d', "dry-run")
         .action((x, c) => c.copy(dryRun = x) )
         .text("dry run")
     }
