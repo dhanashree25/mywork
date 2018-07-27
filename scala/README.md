@@ -109,7 +109,7 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
         --conf="spark.jdbc.password=${JDBC_PASSWORD}" \
         --conf="spark.jdbc.driver=${JDBC_DRIVER}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
-        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0" \
+        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0,com.databricks:spark-xml_2.11:0.4.1" \
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar" \
         --path="path to s3 bucket s3a://"
         
@@ -128,7 +128,7 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
         --conf="spark.jdbc.password=${JDBC_PASSWORD}" \
         --conf="spark.jdbc.driver=${JDBC_DRIVER}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
-        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0" \
+        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0,com.databricks:spark-xml_2.11:0.4.1" \
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar"
 
 
@@ -146,7 +146,7 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
         --conf="spark.jdbc.driver=${JDBC_DRIVER}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
         --jars="./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar" \
-        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0"
+        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0,com.databricks:spark-xml_2.11:0.4.1"
 
 
 
@@ -163,5 +163,5 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
         --conf="spark.jdbc.driver=${JDBC_DRIVER}" \
         --repositories="https://s3.amazonaws.com/redshift-maven-repository/release" \
         --jars="./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar" \
-        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0"
+        --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0,com.databricks:spark-xml_2.11:0.4.1"
 

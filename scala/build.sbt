@@ -18,5 +18,8 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % "test"
 // RedShift (includes AWS SDK - we use this as we need AWS SDK 1.7.4 for Hadoop-AWS)
 libraryDependencies += "com.amazon.redshift" % "redshift-jdbc42" % "1.2.15.1025"
 
+// XML
+libraryDependencies += "com.databricks" %% "spark-xml" % "0.4.1"
+
 // CLI tools
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"

@@ -21,6 +21,8 @@ class Main {
     */
   lazy val sc: SparkContext = spark.sparkContext
 
+  lazy val sqlc: SQLContext = spark.sqlContext
+
   /**
     * Realms table
     *

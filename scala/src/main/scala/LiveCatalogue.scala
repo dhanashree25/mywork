@@ -3,7 +3,7 @@ import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
-object LiveStream extends Main {
+object LiveCatalogue extends Main {
   def main(args: Array[String]): Unit = {
     val parser = defaultParser
 
@@ -25,25 +25,6 @@ object LiveStream extends Main {
     val events_count = events.count()
     // TODO: Add support for stream events
 
-    //
-    //                                 Table "public.live_stream"
-    //           Column           |            Type             | Collation | Nullable | Default
-    // ---------------------------+-----------------------------+-----------+----------+---------
-    //  realm_id                  | integer                     |           | not null |
-    //  title                     | character varying(1024)     |           | not null |
-    //  event_id                  | integer                     |           | not null |
-    //  sport_id                  | integer                     |           | not null |
-    //  tournament_id             | integer                     |           |          |
-    //  property_id               | integer                     |           |          |
-    //  duration                  | integer                     |           | not null |
-    //  thumbnail_url             | character varying(1024)     |           | not null |
-    //  deleted                   | boolean                     |           | not null |
-    //  geo_restriction_type      | character(9)                |           | not null |
-    //  geo_restriction_countries | character varying(2048)     |           | not null |
-    //  start_at                  | timestamp without time zone |           | not null |
-    //  finish_at                 | timestamp without time zone |           | not null |
-    //  updated_at                | timestamp without time zone |           | not null |
-    //
     val df = events.where(col("payload.data.ta") === ActionType.LIVESTREAMING_EVENT_UPDATED)
     val updates = df
       .join(realms, df.col("realm") === realms.col("name"))
@@ -73,7 +54,7 @@ object LiveStream extends Main {
         .write
         .redshift(spark)
         .mode(SaveMode.Append)
-        .option("dbtable", "live_stream")
+        .option("dbtable", "live_catalogue")
         .save()
     } else {
       updates.show()
