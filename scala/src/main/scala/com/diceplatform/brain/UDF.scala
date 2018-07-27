@@ -1,5 +1,6 @@
 package com.diceplatform.brain
 
+import org.apache.spark.sql.expressions.UserDefinedFunction
 import org.apache.spark.sql.functions.udf
 
 object UDF {
@@ -8,7 +9,7 @@ object UDF {
     *
     * @todo Use Action object constants and when().otherwise() function
     */
-  val actionIntToString = udf((action: Int) => action match {
+  val actionIntToString: UserDefinedFunction = udf((action: Int) => action match {
     case 1  => "SESSION_CHECK"
     case 2  => "VOD_PROGRESS"
     case 3  => "LIVE_WATCHING"
@@ -20,5 +21,5 @@ object UDF {
     case -1 => "OTHER"
   })
 
-  val mkString = udf((x:Seq[String]) => x.sorted.mkString(","))
+  val mkString: UserDefinedFunction = udf((x:Seq[String]) => x.sorted.mkString(","))
 }
