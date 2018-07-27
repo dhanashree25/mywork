@@ -25,7 +25,7 @@ object SubscriptionPayment extends Main {
     
     val events_count = events.count()
 
-    val df = events.where(col("payload.data.TA") === "SUCCESSFUL_PURCHASE")
+    val df = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
     
     //val generateUUID = udf(() => UUID.randomUUID().toString)
     
@@ -45,7 +45,7 @@ object SubscriptionPayment extends Main {
                         col("payload.data.SKU").alias("sku"),
                         col("payload.data.REVOKED").alias("revoked"),
                         col("payload.data.CANCELLED").alias("cancelled")
-                    ).withColumn("payment_id" , monotonicallyIncreasingId)
+                    ).withColumn("payment_id" , monotonically_increasing_id)
                     
     val payments = updates
                      .select(
@@ -74,21 +74,21 @@ object SubscriptionPayment extends Main {
                         col("is_trial"),
                         col("trial_days"))
                         
-    print("-----total------"+events_count+"-----payments------"+updates)
+    print("-----total------"+events_count+"-----payments------"+updates.count())
     
     if (!cli.dryRun) {
       payments
           .write
           .redshift(spark)
           .mode(SaveMode.Append)
-          .option("dbtable", "test_payment")
+          .option("dbtable", "payment")
           .save()
           
        subscriptions
           .write
           .redshift(spark)
           .mode(SaveMode.Append)
-          .option("dbtable", "test_subscription")
+          .option("dbtable", "subscription")
           .save()
     } else {
       updates.show()

@@ -5,13 +5,13 @@ create table "public"."test_payment"(
 	country char(2) , 
 	ts timestamp not null,
 	payment_provider varchar(25),
-	amount_with_tax float,
+	amount_with_tax integer not null default -1,
 	currency char(3),
-	sku varchar(50),
+	sku varchar(75),
 	payment_id varchar(50),
-    foreign key(realm_id) references realm(realm_id),
-    foreign key(country) references country(alpha_2),
-    foreign key(currency) references country(alphabetic_code)
+	foreign key(realm_id) references realm(realm_id),
+	foreign key(country) references country(alpha_2),
+	foreign key(currency) references country(alphabetic_code)
 ) 
 	COMPOUND SORTKEY(ts, realm_id, customer_id, country);
 
@@ -24,11 +24,11 @@ create table "public"."test_subscription"(
 	payment_id varchar(50),
 	is_trial boolean,
 	trial_days integer,
-	sku varchar(50),
+	sku varchar(75),
 	revoked boolean,
 	cancelled boolean,
-    foreign key(realm_id) references realm(realm_id),
-    foreign key(country) references country(alpha_2)
+	foreign key(realm_id) references realm(realm_id),
+	foreign key(country) references country(alpha_2)
 ) 
-	COMPOUND SORTKEY(realm_id, country);
+	COMPOUND SORTKEY(ts, realm_id, country);
 	
