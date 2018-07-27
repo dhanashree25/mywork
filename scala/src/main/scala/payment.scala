@@ -3,14 +3,15 @@ import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
-object Payment extends Main {
+object SubscriptionPayment extends Main {
   def main(args: Array[String]): Unit = {
     val parser = defaultParser
 
     parser.head(
-      """Extract-Transform-Load (ETL) task for payments
+      """Extract-Transform-Load (ETL) task for payments and subscriptions
         |
-        |Parses SUCCESSFUL_PURCHASE events from JSON objects stored in files and appends to the payment table
+        |Parses SUCCESSFUL_PURCHASE events from JSON objects stored in files and appends to 
+        |the payment and subscription tables
       """.stripMargin
     )
 
@@ -24,19 +25,12 @@ object Payment extends Main {
     
     val events_count = events.count()
 
-    //
-    //                 Table "public.payments"
-    //   Column  |  Type   | Collation | Nullable | Default
-    // ----------+---------+-----------+----------+---------
-    //  event_id | integer |           | not null |
-    //  realm_id | integer |           | not null |
-    // Indexes:
-    //     "event_pkey" PRIMARY KEY, btree (event_id)
-    //
-    val payments = events.where(col("payload.data.TA") === "SUCCESSFUL_PURCHASE")
-
-    val updates = payments
-                    .join(realms, payments.col("realm") === realms.col("name"))
+    val df = events.where(col("payload.data.TA") === "SUCCESSFUL_PURCHASE")
+    
+    //val generateUUID = udf(() => UUID.randomUUID().toString)
+    
+    val updates = df
+                    .join(realms, df.col("realm") === realms.col("name"))
                     .select(
                         col("realm_id"),
                         col("customerId").alias("customer_id"),
@@ -45,19 +39,56 @@ object Payment extends Main {
                         col("ts"),
                         col("payload.data.PAYMENT_PROVIDER").alias("payment_provider"),
                         col("payload.data.PRICE_WITH_TAX_AMOUNT").alias("amount_with_tax"),
-                        col("payload.data.PRICE_WITH_TAX_CURRENCY").alias("currency")
-                        )
-
-    val updates_count=  updates.count()
-    
-    print("-----total------"+events_count+"-----payments------"+updates_count)
+                        col("payload.data.PRICE_WITH_TAX_CURRENCY").alias("currency"),
+                        col("payload.data.IS_TRIAL").alias("is_trial"),
+                        col("payload.data.TRIAL_DAYS").alias("trial_days"),
+                        col("payload.data.SKU").alias("sku"),
+                        col("payload.data.REVOKED").alias("revoked"),
+                        col("payload.data.CANCELLED").alias("cancelled")
+                    ).withColumn("payment_id" , monotonicallyIncreasingId)
+                    
+    val payments = updates
+                     .select(
+                        col("realm_id"),
+                        col("customer_id"),
+                        col("country"),
+                        col("town"),
+                        col("ts"),
+                        col("payment_provider"),
+                        col("amount_with_tax"),
+                        col("currency"),
+                        col("sku"),
+                        col("payment_id"))
+                        
+    val subscriptions = updates
+                     .select(
+                        col("realm_id"),
+                        col("customer_id"),
+                        col("country"),
+                        col("town"),
+                        col("ts"),
+                        col("sku"),
+                        col("payment_id"),
+                        col("revoked"),
+                        col("cancelled"),
+                        col("is_trial"),
+                        col("trial_days"))
+                        
+    print("-----total------"+events_count+"-----payments------"+updates)
     
     if (!cli.dryRun) {
-       updates
+      payments
           .write
           .redshift(spark)
           .mode(SaveMode.Append)
-          .option("dbtable", "payment")
+          .option("dbtable", "test_payment")
+          .save()
+          
+       subscriptions
+          .write
+          .redshift(spark)
+          .mode(SaveMode.Append)
+          .option("dbtable", "test_subscription")
           .save()
     } else {
       updates.show()
