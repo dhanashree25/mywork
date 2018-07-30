@@ -11,3 +11,6 @@ create table user_logins(
     foreign key(country) references country(alpha_2)
     )
     COMPOUND SORTKEY(ts, realm_id, device, country);
+
+alter table user_logins
+add column is_success boolean; // Todo- make it not null when rerunning whole data
