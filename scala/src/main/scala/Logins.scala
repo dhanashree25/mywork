@@ -74,7 +74,7 @@ object Logins extends Main {
               col("is_success")
               )
    val login_count = logindf.count()
-   print("-----total------"+event_count+"-----logins------"+ login_count)
+   print("-----total------" + event_count + "-----logins------" + login_count)
 
     if (!cli.dryRun) {
        if (login_count> 0){
