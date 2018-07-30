@@ -1,4 +1,4 @@
-create table "public"."test_payment"(
+create table "public"."payment"(
 	customer_id varchar(25) not null, 
 	realm_id int not null, 
 	town varchar(100), 
@@ -15,7 +15,7 @@ create table "public"."test_payment"(
 ) 
 	COMPOUND SORTKEY(ts, realm_id, customer_id, country);
 
-create table "public"."test_subscription"(
+create table "public"."subscription"(
 	customer_id varchar(25) not null, 
 	realm_id int not null, 
 	town varchar(100), 
