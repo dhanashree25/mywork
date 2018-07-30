@@ -49,8 +49,9 @@ object Logins extends Main {
 
     spark.sql("set spark.sql.caseSensitive=true")
 
-    val df = events.where(col("payload.action") === Action.USER_SIGN_IN)
+    val logindf = events.where(col("payload.action") === Action.USER_SIGN_IN)
               .join(realms, events.col("realm") === realms.col("name"))
+              .withColumn("is_success",when(col("payload.data.TA")===ActionType.SUCCESSFUL_LOGIN, true).otherwise(false))
               .select(
               col("realm_id"),
               col("customerId").alias("customer_id"),
@@ -58,21 +59,9 @@ object Logins extends Main {
               col("town"),
               col("ts"),
               col("clientIp").alias("client_ip"),
-              col("payload.data.device").alias("device"),
-              col("payload.data.TA").alias("status") // Todo- make it null when rerunning whole data
+              col("payload.data.device").alias("device")
               )
-              .withColumn("is_success",when(col("status")===ActionType.SUCCESSFUL_LOGIN, true).otherwise(false))
 
-   val logindf = df.select(
-              col("realm_id"),
-              col("customer_id"),
-              col("country"),
-              col("town"),
-              col("ts"),
-              col("client_ip"),
-              col("device"),
-              col("is_success")
-              )
    val login_count = logindf.count()
    print("-----total------" + event_count + "-----logins------" + login_count)
 

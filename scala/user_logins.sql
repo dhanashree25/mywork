@@ -13,4 +13,4 @@ create table user_logins(
     COMPOUND SORTKEY(ts, realm_id, device, country);
 
 alter table user_logins
-add column is_success boolean;
+add column is_success boolean; // Todo- make it not null when rerunning whole data
