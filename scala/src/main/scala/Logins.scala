@@ -30,22 +30,26 @@ object Logins extends Main {
 
     val event_count = events.count()
 
-//                    Table "public.user_logins"
-//       Column    |            Type             | Collation | Nullable | Default
-//    -------------+-----------------------------+-----------+----------+---------
-//     customer_id | character varying(25)       |           |          |
-//     realm_id    | integer                     |           |          |
-//     town        | character varying(100)      |           |          |
-//     country     | character (2)               |           |          |
-//     client_ip   | character varying(50)       |           |          |
-//     type        | character varying(50)       |           |          |
-//     device      | character varying(25)       |           |          |
-//     ts          | timestamp without time zone |           |          |
-//    COMPOUND SORTKEY(ts, realm_id, device, country)
+//                               Table "public.user_logins"
+//         Column    |            Type             | Collation | Nullable | Default 
+//      -------------+-----------------------------+-----------+----------+---------
+//       customer_id | character varying(25)       |           | not null | 
+//       realm_id    | integer                     |           | not null | 
+//       town        | character varying(100)      |           |          | 
+//       country     | character(2)                |           |          | 
+//       client_ip   | character varying(50)       |           |          | 
+//       type        | character varying(50)       |           |          | 
+//       device      | character varying(25)       |           |          | 
+//       ts          | timestamp without time zone |           | not null | 
+//       status      | character varying(25)       |           |          | 
+//       Foreign-key constraints:
+//          "test_user_logins_country_fkey" FOREIGN KEY (country) REFERENCES country(alpha_2)
+//          "test_user_logins_realm_id_fkey" FOREIGN KEY (realm_id) REFERENCES realm(realm_id)
+//       COMPOUND SORTKEY(ts, realm_id, device, country)
 
     spark.sql("set spark.sql.caseSensitive=true")
 
-    val logindf = events.where(col("payload.action") === Action.USER_SIGN_IN)
+    val df = events.where(col("payload.action") === Action.USER_SIGN_IN)
               .join(realms, events.col("realm") === realms.col("name"))
               .select(
               col("realm_id"),
@@ -54,12 +58,23 @@ object Logins extends Main {
               col("town"),
               col("ts"),
               col("clientIp").alias("client_ip"),
-              col("payload.data.device").alias("device")
-            )
+              col("payload.data.device").alias("device"),
+              col("payload.data.TA").alias("status") // Todo- make it null when rerunning whole data
+              )
+              .withColumn("is_success",when(col("status")===ActionType.SUCCESSFUL_LOGIN, true).otherwise(false))
 
-    val login_count = logindf.count()
-
-    print("-----total------"+event_count+"-----logins------"+ login_count)
+   val logindf = df.select(
+              col("realm_id"),
+              col("customer_id"),
+              col("country"),
+              col("town"),
+              col("ts"),
+              col("client_ip"),
+              col("device"),
+              col("is_success")
+              )
+   val login_count = logindf.count()
+   print("-----total------"+event_count+"-----logins------"+ login_count)
 
     if (!cli.dryRun) {
        if (login_count> 0){
