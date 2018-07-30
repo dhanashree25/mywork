@@ -8,7 +8,7 @@ create table "public"."test_payment"(
 	amount_with_tax integer not null default -1,
 	currency char(3),
 	sku varchar(75),
-	payment_id varchar(50),
+	payment_id varchar(50) not null [UNIQUE],
 	foreign key(realm_id) references realm(realm_id),
 	foreign key(country) references country(alpha_2),
 	foreign key(currency) references country(alphabetic_code)
@@ -21,7 +21,7 @@ create table "public"."test_subscription"(
 	town varchar(100), 
 	country char(2) , 
 	ts timestamp not null,
-	payment_id varchar(50),
+	payment_id varchar(50) not null [UNIQUE],
 	is_trial boolean,
 	trial_days integer,
 	sku varchar(75),
