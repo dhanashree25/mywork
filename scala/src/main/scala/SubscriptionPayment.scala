@@ -72,7 +72,7 @@ object SubscriptionPayment extends Main {
                         col("is_trial"),
                         col("trial_days"))
                         
-    print("-----total------"+events_count+"-----payments------"+updates.count())
+    print("-----total------" + events_count + "-----payments------" + updates.count())
     
     if (!cli.dryRun) {
       payments
