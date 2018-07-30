@@ -27,8 +27,6 @@ object SubscriptionPayment extends Main {
 
     val df = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
     
-    //val generateUUID = udf(() => UUID.randomUUID().toString)
-    
     val updates = df
                     .join(realms, df.col("realm") === realms.col("name"))
                     .select(
