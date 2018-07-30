@@ -41,7 +41,7 @@ object Logins extends Main {
 //       type        | character varying(50)       |           |          | 
 //       device      | character varying(25)       |           |          | 
 //       ts          | timestamp without time zone |           | not null | 
-//       status      | character varying(25)       |           |          | 
+//       is_success  | boolean                     |           |          | 
 //       Foreign-key constraints:
 //          "test_user_logins_country_fkey" FOREIGN KEY (country) REFERENCES country(alpha_2)
 //          "test_user_logins_realm_id_fkey" FOREIGN KEY (realm_id) REFERENCES realm(realm_id)
