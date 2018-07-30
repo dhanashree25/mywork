@@ -43,8 +43,7 @@ object Schema {
     StructField("TRIAL_DAYS", IntegerType, nullable=true),
     StructField("REVOKED",  BooleanType, nullable=true),
     StructField("CANCELLED",  BooleanType, nullable=true),
-    StructField("SKU", StringType, nullable=true),
-    StructField("sku", StringType, nullable=true)
+    StructField("SKU", StringType, nullable=true)
   ))
 
   val payload = StructType(List(
