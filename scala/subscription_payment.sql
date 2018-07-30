@@ -11,7 +11,7 @@ create table "public"."payment"(
 	payment_id varchar(50) not null UNIQUE,
 	foreign key(realm_id) references realm(realm_id),
 	foreign key(country) references country(alpha_2),
-	foreign key(currency) references country(alphabetic_code)
+	foreign key(currency) references currency(alphabetic_code)
 ) 
 	COMPOUND SORTKEY(ts, realm_id, customer_id, country);
 
