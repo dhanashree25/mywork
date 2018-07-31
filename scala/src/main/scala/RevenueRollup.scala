@@ -20,7 +20,7 @@ object RevenueRollup extends Main{
       opt[String]('w', "window")
        .required()
        .action((x, c) => c.copy(window = x) )
-       .text("aggregate the records by a window, valid values are day, week, month")
+       .text("aggregate the records by a window, valid values are hour, day, week, month")
 
       opt[String]('f', "from")
         .optional()
