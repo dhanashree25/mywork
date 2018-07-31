@@ -1,7 +1,7 @@
 import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DateType, DecimalType, IntegerType}
+import org.apache.spark.sql.types.{DateType, IntegerType}
 
 case class RollupConfig(path: String = "", dryRun: Boolean = false, from: String = "", to: String = "", window: String = "hour")
 object RevenueRollup extends Main{
@@ -140,6 +140,13 @@ object RevenueRollup extends Main{
       .where(revenue_with_dates.col("source_currency") === "USD")
       .withColumn("amount_usd", col("amount"))
 
+    val date_trunc_format = cli.window match {
+        case "month" => "MM"
+        case "week" => "WEEK"
+        case "day" => "DD"
+        case "hour" => "HOUR"
+    }
+
     val revenue = eur_revenue.union(usd_revenue)
       .select(
         col("realm_id"),
@@ -147,7 +154,7 @@ object RevenueRollup extends Main{
         col("source_currency").as("currency"),
         col("amount"),
         col("amount_usd"),
-        col("ts")
+        date_trunc(date_trunc_format, col("ts")).alias("ts")
       )
 
     if (!cli.dryRun) {
