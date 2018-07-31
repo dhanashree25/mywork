@@ -59,7 +59,8 @@ object Logins extends Main {
               col("town"),
               col("ts"),
               col("clientIp").alias("client_ip"),
-              col("payload.data.device").alias("device")
+              col("payload.data.device").alias("device"),
+              col("is_success")
               )
 
    val login_count = logindf.count()
