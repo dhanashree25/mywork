@@ -3,7 +3,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
 case class RollupConfig(path: String = "", dryRun: Boolean = false, from: String = "", to: String = "", window: String = "1 hour")
-object RollupRollup extends Main{
+object RevenueRollup extends Main{
   def main(args: Array[String]): Unit = {
     val parser = new scopt.OptionParser[RollupConfig]("scopt") {
       head(
