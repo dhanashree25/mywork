@@ -51,7 +51,6 @@ object RevenueRollup extends Main{
       .redshift(spark)
       .option("dbtable", "exchange_rate")
       .load()
-      .as("er")
 
     val exchange_rate_columns = exchange_rates.dtypes.map(dtype => dtype._1)
 
