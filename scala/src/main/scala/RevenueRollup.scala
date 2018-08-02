@@ -5,34 +5,34 @@ import org.apache.spark.sql.types.{DateType, IntegerType}
 
 case class RollupConfig(path: String = "", dryRun: Boolean = false, from: String = "", to: String = "", window: String = "hour")
 object RevenueRollup extends Main{
+  val parser: scopt.OptionParser[RollupConfig] = new scopt.OptionParser[RollupConfig]("scopt") {
+    head(
+      """Extract-Transform-Load (ETL) task for revenue_* roll-up table
+      """.stripMargin
+    )
+
+    opt[Boolean]('d', "dry-run")
+      .action((x, c) => c.copy(dryRun = x) )
+      .optional()
+      .text("dry run")
+
+    opt[String]('w', "window")
+      .required()
+      .action((x, c) => c.copy(window = x) )
+      .text("aggregate the records by a window, valid values are hour, day, week, month")
+
+    opt[String]('f', "from")
+      .optional()
+      .action((x, c) => c.copy(from = x) )
+      .text("the date range to select from (inclusive). Formatted at yyyy-MM-dd HH:mm:ss")
+
+    opt[String]('t', "to")
+      .optional()
+      .action((x, c) => c.copy(to = x) )
+      .text("the date range to select to (exclusive). Formatted at yyyy-MM-dd HH:mm:ss")
+  }
+
   def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[RollupConfig]("scopt") {
-      head(
-        """Extract-Transform-Load (ETL) task for revenue_* roll-up table
-        """.stripMargin
-      )
-
-      opt[Boolean]('d', "dry-run")
-        .action((x, c) => c.copy(dryRun = x) )
-        .optional()
-        .text("dry run")
-
-      opt[String]('w', "window")
-       .required()
-       .action((x, c) => c.copy(window = x) )
-       .text("aggregate the records by a window, valid values are hour, day, week, month")
-
-      opt[String]('f', "from")
-        .optional()
-        .action((x, c) => c.copy(from = x) )
-        .text("the date range to select from (inclusive). Formatted at yyyy-MM-dd HH:mm:ss")
-
-       opt[String]('t', "to")
-        .optional()
-        .action((x, c) => c.copy(to = x) )
-        .text("the date range to select to (exclusive). Formatted at yyyy-MM-dd HH:mm:ss")
-    }
-
     var cli: RollupConfig = RollupConfig()
     parser.parse(args, cli) match {
       case Some(c) => cli = c
