@@ -3,7 +3,7 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 
-case class ExchangeRateConfig(path: String = "", dryRun: Boolean = false, separator: String = ",", header:Boolean = true, dateFormat:String = "dd MMM yyyy")
+case class ExchangeRateConfig(path: String = "", dryRun: Boolean = false, separator: String = ",", header:Boolean = true, dateFormat:String = "dd MMM yyyy", dbTable: String = "exchange_rates")
 
 object ExchangeRateCSV extends Main{
   def main(args: Array[String]): Unit = {
@@ -73,6 +73,11 @@ object ExchangeRateCSV extends Main{
       .optional()
       .action((x, c) => c.copy(dateFormat = x) )
       .text("The date format to use, in Java date format. This can very between daily (dd MMM yyyy) vs all time (yyyy-MM-dd). default is dd MMM yyyy")
+
+    opt[String]('f', "dbtable")
+      .optional()
+      .action((x, c) => c.copy(dbTable = x) )
+      .text("The database table to write the results to")
   }
 
 
@@ -96,7 +101,7 @@ object ExchangeRateCSV extends Main{
       csv
         .write
         .redshift(spark)
-        .option("dbtable", "exchange_rate")
+        .option("dbtable", cli.dbTable)
         .mode(SaveMode.Append)
         .save()
     } else {
