@@ -20,3 +20,6 @@ libraryDependencies += "com.amazon.redshift" % "redshift-jdbc42" % "1.2.15.1025"
 
 // CLI tools
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"
+
+
+Test / testOptions += Tests.Argument("-oF")
