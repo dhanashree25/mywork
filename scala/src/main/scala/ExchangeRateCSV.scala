@@ -41,6 +41,42 @@ object ExchangeRateCSV extends Main{
         .text("The date format to use, in Java date format. This can very between daily (dd MMM yyyy) vs all time (yyyy-MM-dd). default is dd MMM yyyy")
     }
 
+  val parser: scopt.OptionParser[ExchangeRateConfig] = new scopt.OptionParser[ExchangeRateConfig]("scopt") {
+    head(
+      """Extract-Transform-Load (ETL) task for populating exchange rate table by a CSV
+        |
+        |The file should follow the European Central Bank website
+      """.stripMargin)
+
+    opt[String]('p', "path")
+      .action((x, c) => c.copy(path = x) )
+      .required()
+      .text("path to files, local or remote")
+      .required()
+
+    opt[Boolean]('d', "dry-run")
+      .optional()
+      .action((x, c) => c.copy(dryRun = x) )
+      .text("dry run, default is false")
+
+    opt[String]('s', "separator")
+      .optional()
+      .action((x, c) => c.copy(separator = x) )
+      .text("the separator between columns, default is ,")
+
+    opt[Boolean]('h', "header")
+      .optional()
+      .action((x, c) => c.copy(header = x) )
+      .text("whether to use the header (first line) as column names, default is true")
+
+    opt[String]('f', "date-format")
+      .optional()
+      .action((x, c) => c.copy(dateFormat = x) )
+      .text("The date format to use, in Java date format. This can very between daily (dd MMM yyyy) vs all time (yyyy-MM-dd). default is dd MMM yyyy")
+  }
+
+
+  def main(args: Array[String]): Unit = {
     var cli: ExchangeRateConfig = ExchangeRateConfig()
     parser.parse(args, cli) match {
       case Some(c) => cli = c
@@ -54,16 +90,34 @@ object ExchangeRateCSV extends Main{
       .option("inferSchema", value=true)
       .csv(cli.path)
 
-    val columns = csv.dtypes.map(column => column._1)
+    val exchangeRate = selectExchangeRates(csv, cli.dateFormat)
 
-    val currencyColumns = columns.filter(column => column != "Date")
+    if (!cli.dryRun) {
+      csv
+        .write
+        .redshift(spark)
+        .option("dbtable", "exchange_rate")
+        .mode(SaveMode.Append)
+        .save()
+    } else {
+      exchangeRate.show(1000)
+    }
+  }
 
-    val exchangeRate = csv
-      .drop(columns.filter(_.matches("^_c[0-9]+$")).map(_.replace("_", "")): _*) // Drop unnamed columns (extra , in the header)
-      .drop(columns.filter(_.matches("^ +$")): _*) // Drop columns which are just whitespace
+
+  def selectExchangeRates(df: DataFrame, dateFormat: String): DataFrame = {
+    val columns = df.dtypes.map(column => column._1)
+
+    val currencyColumns = columns.filter(column => column != "Date").filter(!_.matches("^ +$"))
+    val dropColumns = columns
+      .filter(column => column.matches("^ +$") || column.matches("^_c[0-9]+$"))
+      .map(_.replace("_", ""))
+
+    df
+      .drop(dropColumns: _*)
       .select(
-        unix_timestamp(col("Date"), cli.dateFormat)
-          .cast(TimestampType) // convert unix timestamp (bigint) to timestamp first
+        unix_timestamp(col("Date"), dateFormat)
+          .cast(TimestampType)
           .cast(DateType)
           .alias("date"),
         // Explode it into new rows
@@ -74,7 +128,7 @@ object ExchangeRateCSV extends Main{
               lit(column.trim)
                 .cast(StringType)
                 .alias("currency"),
-              when(col(column) === "N/A", value=null)
+              when(col(column) === "N/A", value = null)
                 .otherwise(col(column))
                 .cast(DecimalType(12, 4))
                 .alias("rate")
@@ -88,17 +142,5 @@ object ExchangeRateCSV extends Main{
         col("values.rate")
       )
       .na.drop() // Drop values with null (N/A) this will be historical currencies
-
-    if (!cli.dryRun) {
-      exchangeRate
-        .write
-        .redshift(spark)
-        .option("dbtable", "exchange_rate")
-        .mode(SaveMode.Append)
-        .save()
-    } else {
-      println("columns", currencyColumns.mkString(","))
-      exchangeRate.show(1000)
-    }
   }
 }
