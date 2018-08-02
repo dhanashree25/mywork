@@ -29,6 +29,7 @@ abstract class BatchSpec extends FlatSpec with BeforeAndAfter {
   after {
     if (sc != null) {
       sc.stop()
+      sc = null
     }
   }
 }
