@@ -1,9 +1,16 @@
 import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.{DateType, DecimalType, IntegerType}
+import org.apache.spark.sql.types.{DateType, IntegerType}
 
-case class RollupConfig(path: String = "", dryRun: Boolean = false, from: String = "", to: String = "", window: String = "hour")
+case class RollupConfig(
+  path: String = "",
+  dryRun: Boolean = false,
+  from: String = "",
+  to: String = "",
+  window: String = "hour",
+  show: Int = 20
+)
 object RevenueRollup extends Main{
   val parser: scopt.OptionParser[RollupConfig] = new scopt.OptionParser[RollupConfig]("scopt") {
     head(
@@ -30,6 +37,11 @@ object RevenueRollup extends Main{
       .optional()
       .action((x, c) => c.copy(to = x) )
       .text("the date range to select to (exclusive). Formatted at yyyy-MM-dd HH:mm:ss")
+
+    opt[Int]('l', "show")
+      .optional()
+      .action((x, c) => c.copy(show = x) )
+      .text("The number of records to show during dry run")
   }
 
   def selectPayments(df: DataFrame, from: String = "", to: String = ""): DataFrame = {
@@ -78,7 +90,7 @@ object RevenueRollup extends Main{
 
     val revenueRollup = rollupRevenue(payments, cli.window)
 
-    val revenueRollupInUSD = withColumnInCurrency(revenueRollup, exchangeRates, "USD")
+    val revenueRollupInUSD = withColumnInCurrency(revenueRollup, exchangeRates)
 
     val dateTruncateFormat = cli.window match {
         case "month" => "MM"
@@ -88,6 +100,7 @@ object RevenueRollup extends Main{
     }
 
     val revenue = revenueRollupInUSD
+      .withColumnRenamed("amount_with_tax", "amount")
       .withColumnRenamed("amount_with_tax_usd", "amount_usd")
       .withColumn("ts", date_trunc(dateTruncateFormat, col("ts")))
 
@@ -99,7 +112,7 @@ object RevenueRollup extends Main{
         .mode(SaveMode.Append)
         .save()
     } else {
-      revenue.show()
+      revenue.show(cli.show)
     }
  }
 
@@ -182,7 +195,7 @@ object RevenueRollup extends Main{
         window(col("ts"), "1 " + windowDuration).getItem("start").alias("ts")
       )
       .agg(
-        sum(col("amount_with_tax")).alias("amount")
+        sum(col("amount_with_tax")).alias("amount_with_tax")
       )
       .na.drop() // Drop cube by partial dimensions
   }
