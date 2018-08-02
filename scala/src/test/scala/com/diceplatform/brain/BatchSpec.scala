@@ -15,6 +15,7 @@ abstract class BatchSpec extends FlatSpec with BeforeAndAfter {
     val conf = new SparkConf()
       .setMaster(master)
       .setAppName(appName)
+      .set("spark.ui.enabled", "false")
 
     spark = SparkSession
       .builder()
