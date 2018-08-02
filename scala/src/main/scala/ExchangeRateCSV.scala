@@ -1,46 +1,23 @@
-import com.diceplatform.brain.implicits._
+import java.net.URL
+
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
+import java.nio.file.{Files, Paths}
 
-case class ExchangeRateConfig(path: String = "", dryRun: Boolean = false, separator: String = ",", header:Boolean = true, dateFormat:String = "dd MMM yyyy", dbTable: String = "exchange_rates")
+import com.diceplatform.brain.implicits._
 
-object ExchangeRateCSV extends Main{
-  def main(args: Array[String]): Unit = {
-    val parser = new scopt.OptionParser[ExchangeRateConfig]("scopt") {
-      head(
-        """Extract-Transform-Load (ETL) task for populating exchange rate table by a CSV
-          |
-          |The file should follow the European Central Bank website
-        """.stripMargin)
+case class ExchangeRateConfig(
+  url: String = "",
+  dryRun: Boolean = false,
+  separator: String = ",",
+  header: Boolean = true,
+  dateFormat: String = "dd MMM yyyy",
+  dbTable: String = "exchange_rates",
+  show: Int = 20
+)
 
-      opt[String]('p', "path")
-        .action((x, c) => c.copy(path = x) )
-        .required()
-        .text("path to files, local or remote")
-        .required()
-
-      opt[Boolean]('d', "dry-run")
-        .optional()
-        .action((x, c) => c.copy(dryRun = x) )
-        .text("dry run, default is false")
-
-      opt[String]('s', "separator")
-        .optional()
-        .action((x, c) => c.copy(separator = x) )
-        .text("the separator between columns, default is ,")
-
-      opt[Boolean]('h', "header")
-        .optional()
-        .action((x, c) => c.copy(header = x) )
-        .text("whether to use the header (first line) as column names, default is true")
-
-      opt[String]('f', "date-format")
-        .optional()
-        .action((x, c) => c.copy(dateFormat = x) )
-        .text("The date format to use, in Java date format. This can very between daily (dd MMM yyyy) vs all time (yyyy-MM-dd). default is dd MMM yyyy")
-    }
-
+object ExchangeRateCSV extends Main {
   val parser: scopt.OptionParser[ExchangeRateConfig] = new scopt.OptionParser[ExchangeRateConfig]("scopt") {
     head(
       """Extract-Transform-Load (ETL) task for populating exchange rate table by a CSV
@@ -48,11 +25,10 @@ object ExchangeRateCSV extends Main{
         |The file should follow the European Central Bank website
       """.stripMargin)
 
-    opt[String]('p', "path")
-      .action((x, c) => c.copy(path = x) )
+    opt[String]('u', "url")
+      .action((x, c) => c.copy(url = x) )
       .required()
-      .text("path to files, local or remote")
-      .required()
+      .text("url to zip")
 
     opt[Boolean]('d', "dry-run")
       .optional()
@@ -78,8 +54,14 @@ object ExchangeRateCSV extends Main{
       .optional()
       .action((x, c) => c.copy(dbTable = x) )
       .text("The database table to write the results to")
+
+    opt[Int]('l', "show")
+      .optional()
+      .action((x, c) => c.copy(show = x) )
+      .text("The number of records to show during dry run")
   }
 
+  val RANDOM_STRING_LENGTH = 5
 
   def main(args: Array[String]): Unit = {
     var cli: ExchangeRateConfig = ExchangeRateConfig()
@@ -88,12 +70,28 @@ object ExchangeRateCSV extends Main{
       case None => System.exit(1)
     }
 
+    val generator = new scala.util.Random().alphanumeric
+    val prefix = generator.take(RANDOM_STRING_LENGTH).mkString("")
+
+    val zipURL = new URL(cli.url)
+    val zipPath = Files.createTempFile(prefix, "zip")
+    val zipDir = Files.createTempDirectory(prefix)
+
+    DownloadUtil.download(zipURL, zipPath)
+    val files = ZipUtil.unzip(zipPath, zipDir)
+
+    if (files.length > 1) {
+      throw new Exception("More than one file extracted")
+    }
+
+    println("Downloaded ZIP to", zipPath.toString)
+    println("Unzipped CSV to", zipDir.toString)
 
     val csv = spark.read
       .option("header", value=cli.header)
       .option("sep", value=cli.separator)
       .option("inferSchema", value=true)
-      .csv(cli.path)
+      .csv(files.head.toString)
 
     val exchangeRate = selectExchangeRates(csv, cli.dateFormat)
 
@@ -105,7 +103,7 @@ object ExchangeRateCSV extends Main{
         .mode(SaveMode.Append)
         .save()
     } else {
-      exchangeRate.show(1000)
+      exchangeRate.show(cli.show)
     }
   }
 
