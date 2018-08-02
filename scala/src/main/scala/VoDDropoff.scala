@@ -76,18 +76,3 @@ object VoDDropoff extends Main {
     }
   }
 }
-CREATE VIEW vod_dropoff as (
-select v.realm_id, 
-v.video_id,
-v.customer_id, 
-v.start_at,
-date_part (y, start_at)as year,
-date_part (dow, start_at)as dow,
-date_part (mon, start_at)as month,
-date_part (day, start_at)as day,
-date_part (h, start_at)as hour,
-v.progress, 
-c.duration, 
-v.progress*100/c.duration as perc_drop from
-(select session_id, customer_id, realm_id, video_id, min(start_at) start_at, max(end_at) end_at, max(duration) progress from vod_play group by session_id, customer_id, realm_id, video_id) v
-join (select video_dve_id,max(duration) duration from vod_catalogue where duration >0  group by video_dve_id) c on c.video_dve_id= v.video_id;
