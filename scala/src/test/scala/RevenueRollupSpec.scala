@@ -191,8 +191,6 @@ class RevenueRollupSpec extends BatchSpec {
       )
     )
 
-    // 10000/1.15*1.30
-
     val sourceDF = spark.createDataFrame(
       sc.parallelize(data),
       StructType(schema)
