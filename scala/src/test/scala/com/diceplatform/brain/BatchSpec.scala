@@ -5,7 +5,7 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 
 abstract class BatchSpec extends FlatSpec with BeforeAndAfter {
-  protected val master = "local"
+  protected val master = "local[*]"
   protected val appName = "test"
 
   protected var spark: SparkSession = _
