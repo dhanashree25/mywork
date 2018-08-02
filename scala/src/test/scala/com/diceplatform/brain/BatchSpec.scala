@@ -16,6 +16,7 @@ abstract class BatchSpec extends FlatSpec with BeforeAndAfter {
       .setMaster(master)
       .setAppName(appName)
       .set("spark.ui.enabled", "false")
+      .set("spark.driver.host", "localhost")
 
     spark = SparkSession
       .builder()
