@@ -42,12 +42,12 @@ class Main {
 
   lazy val defaultParser: scopt.OptionParser[Config] = {
     new scopt.OptionParser[Config]("scopt") {
-      opt[String]('p', "path")
+      opt[String]("path")
         .action((x, c) => c.copy(path = x) )
         .text("path to files, local or remote")
         .required()
 
-      opt[Boolean]('d', "dry-run")
+      opt[Boolean]("dry-run")
         .action((x, c) => c.copy(dryRun = x) )
         .optional()
         .text("dry run")
@@ -56,20 +56,20 @@ class Main {
 
   lazy val csvParser: scopt.OptionParser[CSVConfig] = {
     new scopt.OptionParser[CSVConfig]("scopt") {
-      opt[String]('p', "path")
+      opt[String]("path")
         .action((x, c) => c.copy(path = x) )
         .text("path to files, local or remote")
         .required()
 
-      opt[Boolean]('d', "dry-run")
+      opt[Boolean]("dry-run")
         .action((x, c) => c.copy(dryRun = x) )
         .text("dry run, default is false")
 
-      opt[String]('s', "separator")
+      opt[String]("separator")
         .action((x, c) => c.copy(separator = x) )
         .text("the separator between columns, default is ,")
 
-      opt[Boolean]('h', "header")
+      opt[Boolean]("header")
         .action((x, c) => c.copy(header = x) )
         .text("whether to use the header (first line) as column names, default is true")
     }

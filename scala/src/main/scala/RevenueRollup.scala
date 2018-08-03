@@ -18,27 +18,27 @@ object RevenueRollup extends Main{
       """.stripMargin
     )
 
-    opt[Boolean]('d', "dry-run")
+    opt[Boolean]("dry-run")
       .action((x, c) => c.copy(dryRun = x) )
       .optional()
       .text("dry run")
 
-    opt[String]('w', "window")
+    opt[String]("window")
       .required()
       .action((x, c) => c.copy(window = x) )
       .text("aggregate the records by a window, valid values are hour, day, week, month")
 
-    opt[String]('f', "from")
+    opt[String]("from")
       .optional()
       .action((x, c) => c.copy(from = x) )
       .text("the date range to select from (inclusive). Formatted at yyyy-MM-dd HH:mm:ss")
 
-    opt[String]('t', "to")
+    opt[String]("to")
       .optional()
       .action((x, c) => c.copy(to = x) )
       .text("the date range to select to (exclusive). Formatted at yyyy-MM-dd HH:mm:ss")
 
-    opt[Int]('l', "show")
+    opt[Int]("show")
       .optional()
       .action((x, c) => c.copy(show = x) )
       .text("The number of records to show during dry run")

@@ -25,37 +25,37 @@ object ExchangeRateCSV extends Main {
         |The file should follow the European Central Bank website
       """.stripMargin)
 
-    opt[String]('u', "url")
+    opt[String]("url")
       .action((x, c) => c.copy(url = x) )
       .required()
       .text("url to zip")
 
-    opt[Boolean]('d', "dry-run")
+    opt[Boolean]("dry-run")
       .optional()
       .action((x, c) => c.copy(dryRun = x) )
       .text("dry run, default is false")
 
-    opt[String]('s', "separator")
+    opt[String]("separator")
       .optional()
       .action((x, c) => c.copy(separator = x) )
       .text("the separator between columns, default is ,")
 
-    opt[Boolean]('h', "header")
+    opt[Boolean]("header")
       .optional()
       .action((x, c) => c.copy(header = x) )
       .text("whether to use the header (first line) as column names, default is true")
 
-    opt[String]('f', "date-format")
+    opt[String]("date-format")
       .optional()
       .action((x, c) => c.copy(dateFormat = x) )
       .text("The date format to use, in Java date format. This can very between daily (dd MMM yyyy) vs all time (yyyy-MM-dd). default is dd MMM yyyy")
 
-    opt[String]('f', "dbtable")
+    opt[String]("dbtable")
       .optional()
       .action((x, c) => c.copy(dbTable = x) )
       .text("The database table to write the results to")
 
-    opt[Int]('l', "show")
+    opt[Int]("show")
       .optional()
       .action((x, c) => c.copy(show = x) )
       .text("The number of records to show during dry run")
