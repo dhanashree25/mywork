@@ -1,6 +1,6 @@
 BEGIN TRANSACTION READ WRITE;
 
-DROP TABLE IF EXISTS "public"."currency";
+DROP TABLE IF EXISTS "public"."country";
 
 CREATE TABLE "public"."country" (
     "name" VARCHAR(256) NOT NULL UNIQUE,
