@@ -11,13 +11,13 @@ abstract class BatchSpec extends FlatSpec with BeforeAndAfter {
   protected var spark: SparkSession = _
   protected var sc: SparkContext = _
 
-  before {
-    val conf = new SparkConf()
-      .setMaster(master)
-      .setAppName(appName)
-      .set("spark.ui.enabled", "false")
-      .set("spark.driver.host", "localhost")
+  val conf: SparkConf = new SparkConf()
+    .setMaster(master)
+    .setAppName(appName)
+    .set("spark.ui.enabled", "false")
+    .set("spark.driver.host", "localhost")
 
+  before {
     spark = SparkSession
       .builder()
       .config(conf)
@@ -27,9 +27,9 @@ abstract class BatchSpec extends FlatSpec with BeforeAndAfter {
   }
 
   after {
-    if (sc != null) {
-      sc.stop()
-      sc = null
+    if (spark != null) {
+      spark.stop()
+      spark = null
     }
   }
 }
