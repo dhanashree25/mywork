@@ -2,7 +2,7 @@ create table session_duration(
     realm_id int not null,
     session_id varchar(64)  not null,
     customer_id varchar(32) not null,
-    duration int defualt 0,
+    duration int default 0,
     started_at timestamp,
     start_at timestamp,
     end_at timestamp,
