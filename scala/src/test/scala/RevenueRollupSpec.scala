@@ -118,7 +118,7 @@ class RevenueRollupSpec extends BatchSpec {
       col("payment_provider") === "STRIPE" and
       col("currency") === "USD" and
       col("ts") === "2018-01-01 00:00:00" and
-      col("amount") === 200
+      col("amount_with_tax") === 200
     )
 
     val row2 = actualDF.where(
@@ -126,7 +126,7 @@ class RevenueRollupSpec extends BatchSpec {
       col("payment_provider") === "STRIPE" and
       col("currency") === "GBP" and
       col("ts") === "2018-01-01 00:00:00" and
-      col("amount") === 1598
+      col("amount_with_tax") === 1598
     )
 
     val row3 = actualDF.where(
@@ -134,7 +134,7 @@ class RevenueRollupSpec extends BatchSpec {
       col("payment_provider") === "GOOGLE_IAP" and
       col("currency") === "USD" and
       col("ts") === "2018-01-01 00:00:00" and
-      col("amount") === 200
+      col("amount_with_tax") === 200
     )
 
     val row4 = actualDF.where(
@@ -142,7 +142,7 @@ class RevenueRollupSpec extends BatchSpec {
       col("payment_provider") === "APPLE_IAP" and
       col("currency") === "USD" and
       col("ts") === "2018-01-01 00:00:00" and
-      col("amount") === 200
+      col("amount_with_tax") === 200
     )
 
     val row5 = actualDF.where(
@@ -150,7 +150,7 @@ class RevenueRollupSpec extends BatchSpec {
       col("payment_provider") === "STRIPE" and
       col("currency") === "USD" and
       col("ts") === "2018-01-01 01:00:00" and
-      col("amount") === 200
+      col("amount_with_tax") === 200
     )
 
     assert(actualDF.count() === 5)
@@ -165,12 +165,9 @@ class RevenueRollupSpec extends BatchSpec {
   "given a dataframe" should "add column in currency" in {
     // We process the data after the whole day, so Monday we can use the existing exchange rate
     val data = Seq(
-//      Row(1, "STRIPE", "AUD", 10000, Timestamp.valueOf("2018-01-01 00:00:00")), // No exchange rate
-//      Row(1, "STRIPE", "GBP", 10000, Timestamp.valueOf("2018-01-02 00:00:00")), // No exchange rate
       Row(1, "STRIPE", "GBP", 10000, Timestamp.valueOf("2018-01-01 00:00:00")), // Monday (should use Monday rate)
       Row(1, "STRIPE", "GBP", 20000, Timestamp.valueOf("2018-01-06 00:00:00")), // Saturday (should use Friday rate)
       Row(1, "STRIPE", "GBP", 30000, Timestamp.valueOf("2018-01-07 00:00:00")) // Sunday (should use Friday rate)
-      // TODO: Add null rate
     )
 
     val exchangeRateDF = spark.createDataFrame(
