@@ -3,7 +3,7 @@ import java.net.URL
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files}
 
 import com.diceplatform.brain.implicits._
 
@@ -12,6 +12,7 @@ case class ExchangeRateConfig(
   dryRun: Boolean = false,
   separator: String = ",",
   header: Boolean = true,
+  date: String = "",
   dateFormat: String = "dd MMM yyyy",
   dbTable: String = "exchange_rates",
   show: Int = 20
@@ -44,6 +45,11 @@ object ExchangeRateCSV extends Main {
       .optional()
       .action((x, c) => c.copy(header = x) )
       .text("whether to use the header (first line) as column names, default is true")
+
+    opt[String]("date")
+      .action((x, c) => c.copy(date = x) )
+      .required()
+      .text("The date of exchange rates to process, this is usually only used on daily exchange rates CSV")
 
     opt[String]("date-format")
       .optional()
@@ -93,7 +99,17 @@ object ExchangeRateCSV extends Main {
       .option("inferSchema", value=true)
       .csv(files.head.toString)
 
-    val exchangeRate = selectExchangeRates(csv, cli.dateFormat)
+    var exchangeRate = selectExchangeRates(csv, cli.dateFormat)
+
+    if (cli.date != "") {
+      exchangeRate = exchangeRate.where(
+        col("date") === unix_timestamp(lit(cli.date), "yyyy/MM/dd").cast(TimestampType).cast(DateType)
+      )
+
+      if (exchangeRate.count() == 0) {
+        throw new Exception(s"Date '${cli.date}' not found in exchange rates")
+      }
+    }
 
     if (!cli.dryRun) {
       csv
@@ -119,6 +135,7 @@ object ExchangeRateCSV extends Main {
     df
       .drop(dropColumns: _*)
       .select(
+        // Convert date into date type
         unix_timestamp(col("Date"), dateFormat)
           .cast(TimestampType)
           .cast(DateType)
