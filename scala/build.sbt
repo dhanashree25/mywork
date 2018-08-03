@@ -22,4 +22,20 @@ libraryDependencies += "com.amazon.redshift" % "redshift-jdbc42" % "1.2.15.1025"
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.7.0"
 
 
+// Full stack traces
 Test / testOptions += Tests.Argument("-oF")
+
+// Fork the test process, this allows us to allocate our own memory and prevents crashing sbt
+Test / fork := true
+
+// Disable parallel execution, as it's not possible with Spark
+Test / parallelExecution := false
+
+// Increase memory amount to 2 GB
+Test / javaOptions ++= Seq("-Xms2048m", "-Xmx2048m")
+
+// Increase max Permanent Generation (PermGen) size which holds loaded classes, interned strings
+Test / javaOptions ++= Seq("-XX:MaxPermSize=2048M", "-XX:+CMSClassUnloadingEnabled")
+
+// Unload Permanent Generation (PermGen) classes, this reclaims memory for tests
+Test / javaOptions ++= Seq("-XX:+CMSClassUnloadingEnabled")
