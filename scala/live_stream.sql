@@ -12,5 +12,6 @@ CREATE TABLE "public"."live_stream" (
     "geo_restriction_countries" VARCHAR(2048) NOT NULL, -- There are 676 2 letter codes, 2 char each + delimiter ~2048
     "start_at" TIMESTAMP NOT NULL,
     "finish_at" TIMESTAMP NOT NULL,
-    "updated_at" TIMESTAMP NOT NULL
+    "updated_at" TIMESTAMP NOT NULL,
+    FOREIGN KEY(realm_id) REFERENCES realm(realm_id)
 ) COMPOUND SORTKEY(realm_id, event_id);

@@ -1,5 +1,5 @@
 create table user_logins(
-	customer_id varchar(25) not null,
+    customer_id varchar(25) not null,
     realm_id int not null,
     town varchar(100),
     country char(2),
@@ -9,8 +9,8 @@ create table user_logins(
     ts timestamp not null,
     foreign key(realm_id) references realm(realm_id),
     foreign key(country) references country(alpha_2)
-    )
-    COMPOUND SORTKEY(ts, realm_id, device, country);
+)
+COMPOUND SORTKEY(ts, realm_id, device, country);
 
 alter table user_logins
 add column is_success boolean; // Todo- make it not null when rerunning whole data

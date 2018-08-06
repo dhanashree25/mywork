@@ -65,7 +65,7 @@ object VODCatalogue extends Main {
         col("ts").alias("updated_at")
       )
 
-    val updates_count=  updates.count()
+    val updates_count = updates.count()
 
     print("-----total------",events_count,"-----vod------", updates_count)
 

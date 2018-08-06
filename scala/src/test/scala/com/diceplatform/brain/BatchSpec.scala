@@ -5,17 +5,19 @@ import org.apache.spark.{SparkConf, SparkContext}
 import org.scalatest.{BeforeAndAfter, FlatSpec}
 
 abstract class BatchSpec extends FlatSpec with BeforeAndAfter {
-  protected val master = "local"
+  protected val master = "local[*]"
   protected val appName = "test"
 
   protected var spark: SparkSession = _
   protected var sc: SparkContext = _
 
-  before {
-    val conf = new SparkConf()
-      .setMaster(master)
-      .setAppName(appName)
+  val conf: SparkConf = new SparkConf()
+    .setMaster(master)
+    .setAppName(appName)
+    .set("spark.ui.enabled", "false")
+    .set("spark.driver.host", "localhost")
 
+  before {
     spark = SparkSession
       .builder()
       .config(conf)
@@ -25,8 +27,9 @@ abstract class BatchSpec extends FlatSpec with BeforeAndAfter {
   }
 
   after {
-    if (sc != null) {
-      sc.stop()
+    if (spark != null) {
+      spark.stop()
+      spark = null
     }
   }
 }

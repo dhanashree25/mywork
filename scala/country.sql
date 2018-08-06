@@ -1,3 +1,7 @@
+BEGIN TRANSACTION READ WRITE;
+
+DROP TABLE IF EXISTS "public"."country";
+
 CREATE TABLE "public"."country" (
     "name" VARCHAR(256) NOT NULL UNIQUE,
     "alpha_2" CHAR(2) NOT NULL UNIQUE
@@ -283,3 +287,5 @@ INSERT INTO "country" ("name", "alpha_2") VALUES
   ('East Timor', 'TP'),
   ('Yugoslavia', 'YU'),
   ('Zaire', 'ZR');
+
+COMMIT;

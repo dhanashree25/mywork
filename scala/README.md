@@ -112,8 +112,7 @@ On OS X you need to enable Remote Login under Sharing in System Preferences
         --packages="com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:${HADOOP_VERSION},com.github.scopt:scopt_2.11:3.7.0" \
         "./target/scala-${SCALA_VERSION}/analytics_${SCALA_VERSION}-${VERSION}.jar" \
         --path="path to s3 bucket s3a://"
-        
-        
+
 
 ### Master
 
