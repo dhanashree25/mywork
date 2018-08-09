@@ -1,5 +1,5 @@
 create table "public"."signups"(
-    customer_id varchar(25) not null,
+    customer_id varchar(100) not null,
     realm_id int not null,
     town varchar(100),
     country char(2) ,

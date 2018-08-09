@@ -1,7 +1,7 @@
  create table vod_play(
     realm_id int not null,
     session_id varchar(64)  not null,
-    customer_id varchar(32) not null,
+    customer_id varchar(100) not null,
     video_id integer,
     duration int not null,
     started_at timestamp,
