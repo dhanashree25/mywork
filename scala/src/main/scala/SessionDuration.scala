@@ -22,12 +22,9 @@ object SessionDuration extends Main {
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
-    val df = events.where(col("payload.action").isin(Action.LIVE_WATCHING, Action.VOD_PROGRESS))
-      .join(realms, events.col("realm") === realms.col("name"), "left_outer")
-
     // TODO: Add support for stream events
-    val vod_df = df.where(col("payload.action") === Action.VOD_PROGRESS)
-    val live_df = df.where(col("payload.action") === Action.LIVE_WATCHING)
+    val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS).join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
+    val live_df = events.where(col("payload.action") === Action.LIVE_WATCHING).join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
 
     val newSessions = vod_df
       .select(collect_set(col("payload.cid")).as("session_ids"))
@@ -101,7 +98,8 @@ object SessionDuration extends Main {
     val updates = vod_updates
       .union(live_updates.withColumn("duration",unix_timestamp(col("end_at"))-unix_timestamp(col("start_at"))))
 
-    val misseddf = df.filter(col("realm_id").isNull)
+    val misseddf = vod_df.filter(col("realm_id").isNull)
+                    .union (live_df.filter(col("realm_id").isNull))
     print("-----Missed sessions------" + misseddf.count() )
     misseddf.collect.foreach(println)
 

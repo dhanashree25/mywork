@@ -31,8 +31,8 @@ object Logins extends Main {
     val event_count = events.count()
 
     val df = events.where(col("payload.action") === Action.USER_SIGN_IN)
-      .join(realms, events.col("realm") === realms.col("name"), "left_outer")
-    
+      .join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
+
     val logindf =df
               .filter(col("realm_id").isNotNull)
               .withColumn("is_success",when(col("payload.data.TA")===ActionType.SUCCESSFUL_LOGIN, true).otherwise(false))
