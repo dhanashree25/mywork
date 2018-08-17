@@ -23,9 +23,9 @@ object LivePlay extends Main {
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
     val df = events.where(col("payload.action") === Action.LIVE_WATCHING)
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
 
-    val newSessions = events
-      .where(col("payload.action") === Action.LIVE_WATCHING)
+    val newSessions = df.
       .select(collect_set(col("payload.cid")).as("session_ids"))
       .first()
       .getList[String](0)
@@ -37,7 +37,7 @@ object LivePlay extends Main {
       .where(col("session_id").isin(newSessions:_*)) // this will need to be optimised
 
     val live_updates = df
-      .join(realms, df.col("realm") === realms.col("name"))
+      .filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
         col("payload.cid").alias("session_id"),
@@ -96,11 +96,9 @@ object LivePlay extends Main {
       )
 
     val updates_count=  updates.count()
-
     print("-----total------",events.count(),"-----live------", updates_count)
 
     val misseddf = df
-      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
       .filter(col("realm_id").isNull)
     print("-----Missed Live events------" + misseddf.count() )
     misseddf.collect.foreach(println)

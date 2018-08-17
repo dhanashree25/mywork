@@ -26,9 +26,10 @@ object SubscriptionPayment extends Main {
     val events_count = events.count()
 
     val df = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
     
     val updates = df
-                    .join(realms, df.col("realm") === realms.col("name"))
+                    .filter(col("realm_id").isNotNull)
                     .select(
                         col("realm_id"),
                         col("customerId").alias("customer_id"),
@@ -74,9 +75,7 @@ object SubscriptionPayment extends Main {
                         
     print("-----total------" + events_count + "-----payments------" + updates.count())
 
-    val misseddf = df
-                  .join(realms, df.col("realm") === realms.col("name"), "left_outer")
-                  .filter(col("realm_id").isNull)
+    val misseddf = df.filter(col("realm_id").isNull)
     print("-----Missed Payments------" + misseddf.count() )
     misseddf.collect.foreach(println)
     

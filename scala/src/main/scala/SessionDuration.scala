@@ -22,12 +22,14 @@ object SessionDuration extends Main {
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
-    // TODO: Add support for stream events
-    val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS)
-    val live_df = events.where(col("payload.action") === Action.LIVE_WATCHING)
+    val df = events.where(col("payload.action").isin(Action.LIVE_WATCHING, Action.VOD_PROGRESS))
+      .join(realms, events.col("realm") === realms.col("name"), "left_outer")
 
-    val newSessions = events
-      .where(col("payload.action") === Action.VOD_PROGRESS)
+    // TODO: Add support for stream events
+    val vod_df = df.where(col("payload.action") === Action.VOD_PROGRESS)
+    val live_df = df.where(col("payload.action") === Action.LIVE_WATCHING)
+
+    val newSessions = vod_df
       .select(collect_set(col("payload.cid")).as("session_ids"))
       .first()
       .getList[String](0)
@@ -40,7 +42,7 @@ object SessionDuration extends Main {
 
     // progress for vod is more significant than calculated duration
     val vod_updates = vod_df
-      .join(realms, vod_df.col("realm") === realms.col("name"))
+      .filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
         col("payload.cid").alias("session_id"),
@@ -69,7 +71,7 @@ object SessionDuration extends Main {
 
     // Because live_actions doesnt have progress so we calculate
     val live_updates = live_df
-      .join(realms, live_df.col("realm") === realms.col("name"))
+      .filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
         col("payload.cid").alias("session_id"),
@@ -99,9 +101,7 @@ object SessionDuration extends Main {
     val updates = vod_updates
       .union(live_updates.withColumn("duration",unix_timestamp(col("end_at"))-unix_timestamp(col("start_at"))))
 
-    val misseddf = events.where(col("payload.action").isin(Action.LIVE_WATCHING, Action.VOD_PROGRESS))
-      .join(realms, events.col("realm") === realms.col("name"), "left_outer")
-      .filter(col("realm_id").isNull)
+    val misseddf = df.filter(col("realm_id").isNull)
     print("-----Missed sessions------" + misseddf.count() )
     misseddf.collect.foreach(println)
 

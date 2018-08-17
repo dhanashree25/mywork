@@ -30,10 +30,13 @@ object Logins extends Main {
 
     val event_count = events.count()
 
-    spark.sql("set spark.sql.caseSensitive=true")
+    val df = events.where(col("payload.action") === Action.USER_SIGN_IN)
+      .join(realms, events.col("realm") === realms.col("name"), "left_outer")
 
-    val logindf = events.where(col("payload.action") === Action.USER_SIGN_IN)
-              .join(realms, events.col("realm") === realms.col("name"))
+    spark.sql("set spark.sql.caseSensitive=true")
+    events
+    val logindf =df
+              .filter(col("realm_id").isNotNull)
               .withColumn("is_success",when(col("payload.data.TA")===ActionType.SUCCESSFUL_LOGIN, true).otherwise(false))
               .select(
               col("realm_id"),
@@ -46,12 +49,10 @@ object Logins extends Main {
               col("is_success")
               )
 
-    val misseddf = events.where(col("payload.action") === Action.USER_SIGN_IN)
-                  .join(realms, events.col("realm") === realms.col("name"), "left_outer")
-                  .filter(col("realm_id").isNull)
-
     val login_count = logindf.count()
     print("-----total------" + event_count + "-----logins------" + login_count)
+
+    val misseddf = df.filter(col("realm_id").isNull)
     print("-----Missed Logins------" + misseddf.count() )
     misseddf.collect.foreach(println)
 

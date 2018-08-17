@@ -27,9 +27,10 @@ object VODCatalogue extends Main {
     val events_count = events.count()
 
     val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
 
     val updates = df
-      .join(realms, df.col("realm") === realms.col("name"))
+      .filter(col("realm_id").isNotNull)
       .select(
         col("payload.data.vid").alias("video_id"),
         col("payload.data.v.vodDveId").alias("video_dve_id"),
@@ -50,9 +51,7 @@ object VODCatalogue extends Main {
     val updates_count = updates.count()
     print("-----total------",events_count,"-----vod------", updates_count)
 
-    val misseddf = df
-                    .join(realms, df.col("realm") === realms.col("name"), "left_outer")
-                    .filter(col("realm_id").isNull)
+    val misseddf = df.filter(col("realm_id").isNull)
     print("-----Missed VOD events------" + misseddf.count() )
     misseddf.collect.foreach(println)
 

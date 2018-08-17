@@ -23,9 +23,9 @@ object VoDPlay extends Main {
 
     // TODO: Add support for stream events
     val df = events.where(col("payload.action") === Action.VOD_PROGRESS)
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
 
-    val newSessions = events
-      .where(col("payload.action") === Action.VOD_PROGRESS)
+    val newSessions = df
       .select(collect_set(col("payload.cid")).as("session_ids"))
       .first()
       .getList[String](0)
@@ -37,7 +37,7 @@ object VoDPlay extends Main {
       .where(col("session_id").isin(newSessions:_*))
 
     val updates = df
-      .join(realms, df.col("realm") === realms.col("name"))
+      .filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
         col("payload.cid").alias("session_id"),
@@ -66,12 +66,10 @@ object VoDPlay extends Main {
         max("end_at").alias("end_at")
       )
 
-    print(updates.count())
+    print("-----total------" + events.count() + "-----payments------" + updates.count())
 
-    val misseddf = df.where(col("payload.action") === Action.VOD_PROGRESS)
-      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
-      .filter(col("realm_id").isNull)
-    print("-----Missed VoD plays------" + misseddf.count() )
+    val misseddf = df.filter(col("realm_id").isNull)
+    print("-----Missed VoD plays------" + misseddf.count())
     misseddf.collect.foreach(println)
 
     if (!cli.dryRun) {
