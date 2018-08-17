@@ -25,29 +25,12 @@ object VODCatalogue extends Main {
         .jsonSingleLine(spark, cli.path, Schema.root)
 
     val events_count = events.count()
-    // TODO: Add support for stream events
 
-   //
-   //                             Table "public.catalogue"
-   //    Column     |            Type             | Collation | Nullable | Default
-   // --------------+-----------------------------+-----------+----------+---------
-   // video_id      | integer                     |           |          |
-   // video_dve_id  | integer                     |           |          |
-   // realm_id      | integer                     |           |          |
-   // title         | character varying(1024)     |           |          |
-   // description   | character varying(1024)     |           |          |
-   // duration      | integer                     |           |          |
-   // thumbnail_url | character varying(1024)     |           |          |
-   // deleted       | boolean                     |           |          |
-   // draft         | boolean                     |           |          |
-   // tags          | character varying(1024)     |           |          |
-   // imported_at   | timestamp without time zone |           |          |
-   // updated_at    | timestamp without time zone |           |          |
-   //
     val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer").cache()
 
     val updates = df
-      .join(realms, df.col("realm") === realms.col("name"))
+      .filter(col("realm_id").isNotNull)
       .select(
         col("payload.data.vid").alias("video_id"),
         col("payload.data.v.vodDveId").alias("video_dve_id"),
@@ -66,8 +49,11 @@ object VODCatalogue extends Main {
       )
 
     val updates_count = updates.count()
-
     print("-----total------",events_count,"-----vod------", updates_count)
+
+    val misseddf = df.filter(col("realm_id").isNull)
+    print("-----Missed VOD events------" + misseddf.count() )
+    misseddf.collect.foreach(println)
 
     if (!cli.dryRun) {
           updates

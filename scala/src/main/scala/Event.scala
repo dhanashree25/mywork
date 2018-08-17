@@ -25,18 +25,10 @@ object Event extends Main {
     val events_count = events.count()
     // TODO: Add support for stream events
 
-    //
-    //                 Table "public.event"
-    //   Column  |  Type   | Collation | Nullable | Default
-    // ----------+---------+-----------+----------+---------
-    //  event_id | integer |           | not null |
-    //  realm_id | integer |           | not null |
-    // Indexes:
-    //     "event_pkey" PRIMARY KEY, btree (event_id)
-    //
     val df = events.where(col("payload.data.ta").isin(ActionType.EVENT_WENT_LIVE, ActionType.EVENT_WENT_NOTLIVE))
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer").cache()
 
-    val updates = df.join(realms, df.col("realm") === realms.col("name"))
+    val updates = df.filter(col("realm_id").isNotNull)
 
     val updates_count =  updates.count()
     print("-----total------",events_count,"-----events------", updates_count)
@@ -48,7 +40,7 @@ object Event extends Main {
               col("realm_id"),
               col("ts").alias("start_at")
             )
-    val live_count = updates_live.count()
+
     val updates_not_live =  updates
         .where(col("payload.data.ta") === ActionType.EVENT_WENT_NOTLIVE)
         .select(
@@ -56,9 +48,16 @@ object Event extends Main {
           col("realm_id"),
           col("ts").alias("finish_at")
         )
-    val notlive_count= updates_not_live.count()
 
+    val live_count = updates_live.count()
+    val notlive_count= updates_not_live.count()
     print("-----total------",events_count,"-----live events------", live_count,"-----notlive events------", notlive_count)
+
+    val misseddf = df
+      .filter(col("realm_id").isNull)
+    print("-----Missed Events------" + misseddf.count() )
+    misseddf.collect.foreach(println)
+
     if (!cli.dryRun) {
      updates_live
             .write
