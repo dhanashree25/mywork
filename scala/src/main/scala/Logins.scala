@@ -32,9 +32,7 @@ object Logins extends Main {
 
     val df = events.where(col("payload.action") === Action.USER_SIGN_IN)
       .join(realms, events.col("realm") === realms.col("name"), "left_outer")
-
-    spark.sql("set spark.sql.caseSensitive=true")
-    events
+    
     val logindf =df
               .filter(col("realm_id").isNotNull)
               .withColumn("is_success",when(col("payload.data.TA")===ActionType.SUCCESSFUL_LOGIN, true).otherwise(false))
