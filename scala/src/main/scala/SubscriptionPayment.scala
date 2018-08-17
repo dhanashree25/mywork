@@ -73,6 +73,12 @@ object SubscriptionPayment extends Main {
                         col("trial_days"))
                         
     print("-----total------" + events_count + "-----payments------" + updates.count())
+
+    val misseddf = df
+                  .join(realms, df.col("realm") === realms.col("name"), "left_outer")
+                  .filter(col("realm_id").isNull)
+    print("-----Missed Payments------" + misseddf.count() )
+    misseddf.collect.foreach(println)
     
     if (!cli.dryRun) {
       payments

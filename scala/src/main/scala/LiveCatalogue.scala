@@ -49,6 +49,12 @@ object LiveCatalogue extends Main {
 
     print("-----total------",events_count,"-----live------", updates_count)
 
+    val misseddf = df
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
+      .filter(col("realm_id").isNull)
+    print("-----Missed Live events------" + misseddf.count() )
+    misseddf.collect.foreach(println)
+
     if (!cli.dryRun) {
       updates
         .write

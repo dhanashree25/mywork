@@ -37,7 +37,8 @@ object Signup extends Main{
               col("ts"),
               col("payload.data.device").alias("device")
             )
-    val missed_signups = events.where(col("payload.data.TA") === ActionType.REGISTER_USER).join(realms, events.col("realm") === realms.col("name"), "left_outer")
+    val missed_signups = events.where(col("payload.data.TA") === ActionType.REGISTER_USER)
+                          .join(realms, events.col("realm") === realms.col("name"), "left_outer")
                           .filter(col("realm_id").isNull)
 
     val signupdf_count=  signupdf.count()

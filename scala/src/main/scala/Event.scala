@@ -25,15 +25,6 @@ object Event extends Main {
     val events_count = events.count()
     // TODO: Add support for stream events
 
-    //
-    //                 Table "public.event"
-    //   Column  |  Type   | Collation | Nullable | Default
-    // ----------+---------+-----------+----------+---------
-    //  event_id | integer |           | not null |
-    //  realm_id | integer |           | not null |
-    // Indexes:
-    //     "event_pkey" PRIMARY KEY, btree (event_id)
-    //
     val df = events.where(col("payload.data.ta").isin(ActionType.EVENT_WENT_LIVE, ActionType.EVENT_WENT_NOTLIVE))
 
     val updates = df.join(realms, df.col("realm") === realms.col("name"))
@@ -59,6 +50,13 @@ object Event extends Main {
     val notlive_count= updates_not_live.count()
 
     print("-----total------",events_count,"-----live events------", live_count,"-----notlive events------", notlive_count)
+
+    val misseddf = df.where(col("payload.action") === Action.USER_SIGN_IN)
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
+      .filter(col("realm_id").isNull)
+    print("-----Missed Events------" + misseddf.count() )
+    misseddf.collect.foreach(println)
+
     if (!cli.dryRun) {
      updates_live
             .write

@@ -22,29 +22,10 @@ object LivePlay extends Main {
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
-    // TODO: Add support for stream events
-
-    /**
-                               Table "public.vod_play"
-        Column    |            Type             | Collation | Nullable | Default
-     -------------+-----------------------------+-----------+----------+---------
-      realm_id    | integer                     |           | not null |
-      session_id  | character varying(64)       |           | not null |
-      customer_id | character varying(32)       |           | not null |
-      video_id    | integer                     |           | not null |
-      duration    | integer                     |           | not null |
-      started_at  | timestamp without time zone |           | not null |
-      start_at    | timestamp without time zone |           | not null |
-      end_at      | timestamp without time zone |           | not null |
-      country     | character(2)                |           | not null |
-      town        | character varying(1024)     |           | not null |
-
-      */
-
     val df = events.where(col("payload.action") === Action.LIVE_WATCHING)
 
     val newSessions = events
-      .where(col("payload.action") === Action.VOD_PROGRESS)
+      .where(col("payload.action") === Action.LIVE_WATCHING)
       .select(collect_set(col("payload.cid")).as("session_ids"))
       .first()
       .getList[String](0)
@@ -85,7 +66,7 @@ object LivePlay extends Main {
       )
       .withColumn("duration",unix_timestamp(col("end_at"))-unix_timestamp(col("start_at")))
 
-      val reorderedColumnNames: Array[String] = Array("realm_id",
+    val reorderedColumnNames: Array[String] = Array("realm_id",
                                                  "session_id",
                                                  "customer_id",
                                                  "video_id",
@@ -97,7 +78,7 @@ object LivePlay extends Main {
                                                  "country",
                                                  "town")
 
-       val updates = live_updates.select(reorderedColumnNames.head, reorderedColumnNames.tail: _*).union(previousPlays)
+    val updates = live_updates.select(reorderedColumnNames.head, reorderedColumnNames.tail: _*).union(previousPlays)
       .groupBy(
         col("realm_id"),
         col("session_id"), // TODO: Consider removing
@@ -114,6 +95,15 @@ object LivePlay extends Main {
         max("end_at").alias("end_at")
       )
 
+    val updates_count=  updates.count()
+
+    print("-----total------",events.count(),"-----live------", updates_count)
+
+    val misseddf = df
+      .join(realms, df.col("realm") === realms.col("name"), "left_outer")
+      .filter(col("realm_id").isNull)
+    print("-----Missed Live events------" + misseddf.count() )
+    misseddf.collect.foreach(println)
 
     if (!cli.dryRun) {
           print("Writing to table")
