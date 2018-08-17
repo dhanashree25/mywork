@@ -28,17 +28,6 @@ object Signup extends Main{
 
     val event_count = events.count()
 
-//                               Table "public.signups"
-//       Column    |            Type             | Collation | Nullable | Default
-//    -------------+-----------------------------+-----------+----------+---------
-//     customer_id | character varying(25)       |           |          |
-//     realm_id    | integer                     |           |          |
-//     town        | character varying(100)      |           |          |
-//     country     | character (2)               |           |          |
-//     ts          | timestamp without time zone |           |          |
-//     device      | character varying(25)       |           |          |
-//     COMPOUND SORTKEY(ts, realm_id, device, country)
-
     spark.sql("set spark.sql.caseSensitive=true")
     val signupdf = events.where(col("payload.data.TA") === ActionType.REGISTER_USER).join(realms, events.col("realm") === realms.col("name")).select(
               col("realm_id"),
@@ -48,9 +37,14 @@ object Signup extends Main{
               col("ts"),
               col("payload.data.device").alias("device")
             )
+    val missed_signups = events.where(col("payload.data.TA") === ActionType.REGISTER_USER).join(realms, events.col("realm") === realms.col("name"), "left_outer")
+                          .filter(col("realm_id").isNull)
+
     val signupdf_count=  signupdf.count()
 
-    print("-----total------"+event_count+"-----signups------"+ signupdf_count)
+    print("-----total------" + event_count + "-----signups------" + signupdf_count)
+    print("-----Missed Signups------" + missed_signups.count() )
+    missed_signups.collect.foreach(println)
 
     if (!cli.dryRun) {
       if (signupdf_count> 0){
