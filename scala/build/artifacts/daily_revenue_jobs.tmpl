@@ -5,7 +5,7 @@
     "Type": "Spark",
     "Args":[
         "--class",
-        "ExchangeRateCSV0",
+        "ExchangeRateCSV",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:postgresql://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
