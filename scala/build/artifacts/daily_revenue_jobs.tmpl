@@ -5,8 +5,7 @@
     "Type": "Spark",
     "Args":[
         "--class",
-        "ExchangeRateCSV0",
-        "--conf=maximizeResourceAllocation=true",
+        "ExchangeRateCSV",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:postgresql://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -20,13 +19,12 @@
       ]
   },
   {
-    "ActionOnFailure": "TERMINATE_JOB_FLOW",
+    "ActionOnFailure": "CANCEL_AND_WAIT",
     "Name": "daily_subscription_payment",
     "Type": "Spark",
     "Args":[
         "--class",
         "SubscriptionPayment",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:postgresql://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -46,7 +44,6 @@
     "Args":[
         "--class",
         "SubscriptionPayment",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:postgresql://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
