@@ -25,8 +25,10 @@ object Event extends Main {
     val events_count = events.count()
     // TODO: Add support for stream events
 
-    val df = events.where(col("payload.data.ta").isin(ActionType.EVENT_WENT_LIVE, ActionType.EVENT_WENT_NOTLIVE))
-      .join(realms, df.col("realm") === realms.col("name"), "left_outer").cache()
+    val df_events = events.where(col("payload.data.ta").isin(ActionType.EVENT_WENT_LIVE, ActionType.EVENT_WENT_NOTLIVE))
+
+    val df = df_events
+      .join(realms, df_events.col("realm") === realms.col("name"), "left_outer").cache()
 
     val updates = df.filter(col("realm_id").isNotNull)
 
