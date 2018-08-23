@@ -10,7 +10,7 @@ object SubscriptionPayment extends Main {
     parser.head(
       """Extract-Transform-Load (ETL) task for payments and subscriptions
         |
-        |Parses SUCCESSFUL_PURCHASE events from JSON objects stored in files and appends to 
+        |Parses SUCCESSFUL_PURCHASE events from JSON objects stored in files and appends to
         |the payment and subscription tables
       """.stripMargin
     )
@@ -22,12 +22,12 @@ object SubscriptionPayment extends Main {
     }
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
-    
+
     val events_count = events.count()
 
     val df = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
       .join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
-    
+
     val updates = df
                     .filter(col("realm_id").isNotNull)
                     .select(
@@ -45,7 +45,7 @@ object SubscriptionPayment extends Main {
                         col("payload.data.REVOKED").alias("revoked"),
                         col("payload.data.CANCELLED").alias("cancelled")
                     ).withColumn("payment_id" , monotonically_increasing_id)
-                    
+
     val payments = updates
                      .select(
                         col("realm_id"),
@@ -58,7 +58,7 @@ object SubscriptionPayment extends Main {
                         col("currency"),
                         col("sku"),
                         col("payment_id"))
-                        
+
     val subscriptions = updates
                      .select(
                         col("realm_id"),
@@ -72,13 +72,13 @@ object SubscriptionPayment extends Main {
                         col("cancelled"),
                         col("is_trial"),
                         col("trial_days"))
-                        
+
     print("-----total------" + events_count + "-----payments------" + updates.count())
 
     val misseddf = df.filter(col("realm_id").isNull)
     print("-----Missed Payments------" + misseddf.count() )
     misseddf.collect.foreach(println)
-    
+
     if (!cli.dryRun) {
       payments
           .write
@@ -86,7 +86,7 @@ object SubscriptionPayment extends Main {
           .mode(SaveMode.Append)
           .option("dbtable", "payment")
           .save()
-          
+
        subscriptions
           .write
           .redshift(spark)
@@ -95,7 +95,7 @@ object SubscriptionPayment extends Main {
           .save()
     } else {
       updates.show()
-      
+
     }
   }
 }

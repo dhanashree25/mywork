@@ -6,7 +6,6 @@
     "Args":[
         "--class",
         "Event",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -26,7 +25,6 @@
     "Args":[
         "--class",
         "Signup",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -46,7 +44,6 @@
     "Args":[
         "--class",
         "Logins",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -66,7 +63,6 @@
     "Args":[
         "--class",
         "VODCatalogue",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -86,7 +82,6 @@
     "Args":[
         "--class",
         "LiveCatalogue",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -106,7 +101,6 @@
     "Args":[
         "--class",
         "VoDPlay",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -126,7 +120,6 @@
     "Args":[
         "--class",
         "LivePlay",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -146,7 +139,6 @@
     "Args":[
         "--class",
         "SessionDuration",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
@@ -166,7 +158,6 @@
     "Args":[
         "--class",
         "VoDDropoff",
-        "--conf=maximizeResourceAllocation=true",
         "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
         "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
         "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",

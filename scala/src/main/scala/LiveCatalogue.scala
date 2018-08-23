@@ -27,6 +27,7 @@ object LiveCatalogue extends Main {
 
     val df = events.where(col("payload.data.ta") === ActionType.LIVESTREAMING_EVENT_UPDATED)
       .join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
+
     val updates = df.filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
