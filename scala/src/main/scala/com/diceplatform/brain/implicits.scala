@@ -84,8 +84,11 @@ object implicits {
       * Get the redshift database connection for writing
       */
     def redshift(spark: SparkSession): DataFrameWriter[Row] = {
-      dfw.format("jdbc")
-        .option("driver", spark.conf.get(JDBC_CONF_DRIVER_KEY, JDBC_CONF_DRIVER_DEFAULT))
+      dfw
+        .format("com.databricks.spark.redshift")
+        .option("forward_spark_s3_credentials", "true")
+        .option("tempformat", "CSV")
+        .option("tempdir", "s3n://test-dce-cluster")
         .option("url", spark.conf.get(JDBC_CONF_URL_KEY))
         .option("user", spark.conf.get(JDBC_CONF_USER_KEY))
         .option("password", spark.conf.get(JDBC_CONF_PASSWORD_KEY))
@@ -97,8 +100,11 @@ object implicits {
       * Get the redshift database connection for reader
       */
     def redshift(spark: SparkSession): DataFrameReader = {
-      dfr.format("jdbc")
-        .option("driver", spark.conf.get(JDBC_CONF_DRIVER_KEY, JDBC_CONF_DRIVER_DEFAULT))
+      dfr
+        .format("com.databricks.spark.redshift")
+        .option("forward_spark_s3_credentials", "true")
+        .option("tempformat", "CSV")
+        .option("tempdir", "s3n://test-dce-cluster")
         .option("url", spark.conf.get(JDBC_CONF_URL_KEY))
         .option("user", spark.conf.get(JDBC_CONF_USER_KEY))
         .option("password", spark.conf.get(JDBC_CONF_PASSWORD_KEY))

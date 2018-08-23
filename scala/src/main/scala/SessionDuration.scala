@@ -32,7 +32,12 @@ object SessionDuration extends Main {
       .getList[String](0)
       .toArray()        //This will need optimisation
 
-    val previousSessions = spark.read.redshift(spark)
+    val previousSessions = spark.read
+      .format("com.databricks.spark.redshift")
+              .option("forward_spark_s3_credentials", "true")
+              .option("tempformat", "CSV")
+              .option("tempdir", "s3n://test-dce-cluster")
+      .redshift(spark)
       .option("dbtable", "session_duration")
       .load()
       .where(col("session_id").isin(newSessions:_*)) // this will need to be optimised
@@ -95,11 +100,27 @@ object SessionDuration extends Main {
         max("end_at").alias("end_at")
       )
 
-    val updates = vod_updates
+    val updatesdf = vod_updates
       .union(live_updates.withColumn("duration",unix_timestamp(col("end_at"))-unix_timestamp(col("start_at"))))
+
+    val updates = updatesdf
+      .select(
+        col("realm_id"),
+        col("session_id"),
+        col("customer_id"),
+        col("duration"),
+        col("started_at"),
+        col("start_at "),
+        col("end_at"),
+        col("country"),
+        col("town")
+      )
 
     val misseddf = vod_df.filter(col("realm_id").isNull)
                     .union (live_df.filter(col("realm_id").isNull))
+
+    print("-----total------" + events.count() + "-----payments------" + updates.count())
+
     print("-----Missed sessions------" + misseddf.count() )
     misseddf.collect.foreach(println)
 

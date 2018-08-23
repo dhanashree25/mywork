@@ -26,7 +26,7 @@ object SubscriptionPayment extends Main {
     val events_count = events.count()
 
     val df = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
-      .join(realms, df.col("realm") === realms.col("name"), "left_outer").cache()
+      .join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
     
     val updates = df
                     .filter(col("realm_id").isNotNull)
