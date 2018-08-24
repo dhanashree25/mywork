@@ -69,7 +69,7 @@ object Logins extends Main {
          logindf.write.
            redshift(spark)
            .option("dbtable", "user_logins")
-           .mode("append")
+           .mode(SaveMode.Append)
            .save()
        }
     } else {
