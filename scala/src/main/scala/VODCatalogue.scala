@@ -26,16 +26,9 @@ object VODCatalogue extends Main {
 
     val events_count = events.count()
 
-<<<<<<< HEAD
     val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
       .join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
-=======
-    val df_vod = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
-
-    val df = df_vod
-      .join(realms, df_vod.col("realm") === realms.col("name"), "left_outer").cache()
->>>>>>> release_candidate
-
+    
     val updates = df
       .filter(col("realm_id").isNotNull)
       .select(

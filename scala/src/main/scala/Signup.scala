@@ -35,11 +35,11 @@ object Signup extends Main{
     val signupdf = df.filter(col("realm_id").isNotNull)
       .select(
               col("realm_id"),
-              col("customerId").alias("customer_id"),
               col("country"),
               col("town"),
               col("ts"),
-              col("payload.data.device").alias("device")
+              col("payload.data.device").alias("device"),
+              col("customerId").alias("customer_id"),
             )
 
     val signupdf_count=  signupdf.count()

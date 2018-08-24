@@ -6,7 +6,6 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkContext._
 import org.apache.spark.SparkConf
 import org.apache.hadoop.io._
-import org.apache.spark.sql.{RuntimeConfig, _}
 
 
 object Logins extends Main {
@@ -43,18 +42,19 @@ object Logins extends Main {
               col("ts"),
               col("clientIp").alias("client_ip"),
               col("payload.data.device").alias("device"),
-              col("is_success"), col("customerId").alias("customer_id")
+              col("is_success"),
+              col("customerId").alias("customer_id")
               )
 
     val logindf = login
-      .select(col("realm_id"),
-        col("town"),
-        col("country"),
-        col("client_ip"),
-        col("device"),
-        col("ts"),
-        col("is_success"),
-        col("customer_id"))
+            .select(col("realm_id"),
+              col("town"),
+              col("country"),
+              col("client_ip"),
+              col("device"),
+              col("ts"),
+              col("is_success"),
+              col("customer_id"))
 
     val login_count = logindf.count()
     print("-----total------" + event_count + "-----logins------" + login_count)
