@@ -23,16 +23,17 @@ object SessionDuration extends Main {
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
     // TODO: Add support for stream events
-    val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS).join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
-    val live_df = events.where(col("payload.action") === Action.LIVE_WATCHING).join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
+    val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS).join(realms, col("realm") === realms.col("name"), "left_outer").cache()
+    val live_df = events.where(col("payload.action") === Action.LIVE_WATCHING).join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
-    val newSessions = vod_df
+    val newSessions = events.where(col("payload.action").isin(Action.VOD_PROGRESS, Action.LIVE_WATCHING))
       .select(collect_set(col("payload.cid")).as("session_ids"))
       .first()
       .getList[String](0)
       .toArray()        //This will need optimisation
 
-    val previousSessions = spark.read.redshift(spark)
+    val previousSessions = spark.read
+      .redshift(spark)
       .option("dbtable", "session_duration")
       .load()
       .where(col("session_id").isin(newSessions:_*)) // this will need to be optimised
@@ -95,11 +96,27 @@ object SessionDuration extends Main {
         max("end_at").alias("end_at")
       )
 
-    val updates = vod_updates
+    val updatesdf = vod_updates
       .union(live_updates.withColumn("duration",unix_timestamp(col("end_at"))-unix_timestamp(col("start_at"))))
+
+    val updates = updatesdf
+      .select(
+        col("realm_id"),
+        col("session_id"),
+        col("customer_id"),
+        col("duration"),
+        col("started_at"),
+        col("start_at"),
+        col("end_at"),
+        col("country"),
+        col("town")
+      )
 
     val misseddf = vod_df.filter(col("realm_id").isNull)
                     .union (live_df.filter(col("realm_id").isNull))
+
+    print("-----total------" + events.count() + "-----payments------" + updates.count())
+
     print("-----Missed sessions------" + misseddf.count() )
     misseddf.collect.foreach(println)
 

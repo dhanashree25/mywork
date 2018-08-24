@@ -25,10 +25,8 @@ object LiveCatalogue extends Main {
     val events_count = events.count()
     // TODO: Add support for stream events
 
-    val df_livestreaming = events.where(col("payload.data.ta") === ActionType.LIVESTREAMING_EVENT_UPDATED)
-
-    val df = df_livestreaming
-      .join(realms, df_livestreaming.col("realm") === realms.col("name"), "left_outer").cache()
+    val df = events.where(col("payload.data.ta") === ActionType.LIVESTREAMING_EVENT_UPDATED)
+      .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     val updates = df.filter(col("realm_id").isNotNull)
       .select(

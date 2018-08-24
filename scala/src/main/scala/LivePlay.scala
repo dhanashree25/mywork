@@ -22,10 +22,8 @@ object LivePlay extends Main {
 
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
-    val df_live = events.where(col("payload.action") === Action.LIVE_WATCHING)
-
-    val df = df_live
-      .join(realms, df_live.col("realm") === realms.col("name"), "left_outer").cache()
+    val df = events.where(col("payload.action") === Action.LIVE_WATCHING)
+      .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     val newSessions = df
       .select(collect_set(col("payload.cid")).as("session_ids"))

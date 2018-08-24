@@ -4,7 +4,6 @@ create table user_logins(
     town varchar(100),
     country char(2),
     client_ip varchar(50),
-    type varchar(50),
     device varchar(25),
     ts timestamp not null,
     foreign key(realm_id) references realm(realm_id),

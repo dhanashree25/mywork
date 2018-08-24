@@ -25,35 +25,33 @@ object SubscriptionPayment extends Main {
 
     val events_count = events.count()
 
-    val df_purchase = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
-
-    val df = df_purchase
-      .join(realms, df_purchase.col("realm") === realms.col("name"), "left_outer").cache()
+    val df = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
+      .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     val updates = df
                     .filter(col("realm_id").isNotNull)
                     .select(
-                        col("realm_id"),
-                        col("customerId").alias("customer_id"),
-                        col("country"),
-                        col("town"),
-                        col("ts"),
-                        col("payload.data.PAYMENT_PROVIDER").alias("payment_provider"),
-                        col("payload.data.PRICE_WITH_TAX_AMOUNT").alias("amount_with_tax"),
-                        col("payload.data.PRICE_WITH_TAX_CURRENCY").alias("currency"),
-                        col("payload.data.IS_TRIAL").alias("is_trial"),
-                        col("payload.data.TRIAL_DAYS").alias("trial_days"),
-                        col("payload.data.SKU").alias("sku"),
-                        col("payload.data.REVOKED").alias("revoked"),
-                        col("payload.data.CANCELLED").alias("cancelled")
+                      col("customerId").alias("customer_id"),
+                      col("realm_id"),
+                      col("town"),
+                      col("country"),
+                      col("ts"),
+                      col("payload.data.PAYMENT_PROVIDER").alias("payment_provider"),
+                      col("payload.data.PRICE_WITH_TAX_AMOUNT").alias("amount_with_tax"),
+                      col("payload.data.PRICE_WITH_TAX_CURRENCY").alias("currency"),
+                      col("payload.data.IS_TRIAL").alias("is_trial"),
+                      col("payload.data.TRIAL_DAYS").alias("trial_days"),
+                      col("payload.data.SKU").alias("sku"),
+                      col("payload.data.REVOKED").alias("revoked"),
+                      col("payload.data.CANCELLED").alias("cancelled")
                     ).withColumn("payment_id" , monotonically_increasing_id)
 
     val payments = updates
                      .select(
-                        col("realm_id"),
                         col("customer_id"),
-                        col("country"),
+                        col("realm_id"),
                         col("town"),
+                        col("country"),
                         col("ts"),
                         col("payment_provider"),
                         col("amount_with_tax"),
@@ -63,17 +61,17 @@ object SubscriptionPayment extends Main {
 
     val subscriptions = updates
                      .select(
-                        col("realm_id"),
                         col("customer_id"),
-                        col("country"),
+                        col("realm_id"),
                         col("town"),
+                        col("country"),
                         col("ts"),
-                        col("sku"),
                         col("payment_id"),
-                        col("revoked"),
-                        col("cancelled"),
                         col("is_trial"),
-                        col("trial_days"))
+                        col("trial_days"),
+                        col("sku"),
+                        col("revoked"),
+                        col("cancelled"))
 
     print("-----total------" + events_count + "-----payments------" + updates.count())
 
