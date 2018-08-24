@@ -39,7 +39,7 @@ object Signup extends Main{
               col("town"),
               col("ts"),
               col("payload.data.device").alias("device"),
-              col("customerId").alias("customer_id"),
+              col("customerId").alias("customer_id")
             )
 
     val signupdf_count=  signupdf.count()
