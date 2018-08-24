@@ -78,6 +78,7 @@ object implicits {
   private val JDBC_CONF_URL_KEY = "spark.jdbc.url"
   private val JDBC_CONF_USER_KEY = "spark.jdbc.username"
   private val JDBC_CONF_PASSWORD_KEY = "spark.jdbc.password"
+  private val REDSHIFT_TEMP = "spark.redshift.temp"
 
   implicit class ExtendedDataFrameWriter(dfw: DataFrameWriter[Row]) extends Serializable {
     /**
@@ -88,7 +89,7 @@ object implicits {
         .format("com.databricks.spark.redshift")
         .option("forward_spark_s3_credentials", "true")
         .option("tempformat", "CSV")
-        .option("tempdir", "s3n://test-dce-cluster")
+        .option("tempdir", "s3n://"+spark.conf.get(REDSHIFT_TEMP, "qa-dicebrain-dce-test-temp-redshift"))
         .option("url", spark.conf.get(JDBC_CONF_URL_KEY))
         .option("user", spark.conf.get(JDBC_CONF_USER_KEY))
         .option("password", spark.conf.get(JDBC_CONF_PASSWORD_KEY))
@@ -104,7 +105,7 @@ object implicits {
         .format("com.databricks.spark.redshift")
         .option("forward_spark_s3_credentials", "true")
         .option("tempformat", "CSV")
-        .option("tempdir", "s3n://test-dce-cluster")
+        .option("tempdir", "s3n://"+spark.conf.get(REDSHIFT_TEMP, "qa-dicebrain-dce-test-temp-redshift"))
         .option("url", spark.conf.get(JDBC_CONF_URL_KEY))
         .option("user", spark.conf.get(JDBC_CONF_USER_KEY))
         .option("password", spark.conf.get(JDBC_CONF_PASSWORD_KEY))
