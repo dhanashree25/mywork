@@ -23,8 +23,8 @@ object SessionDuration extends Main {
     val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
     // TODO: Add support for stream events
-    val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS).join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
-    val live_df = events.where(col("payload.action") === Action.LIVE_WATCHING).join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
+    val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS).join(realms, col("realm") === realms.col("name"), "left_outer").cache()
+    val live_df = events.where(col("payload.action") === Action.LIVE_WATCHING).join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     val newSessions = vod_df
       .select(collect_set(col("payload.cid")).as("session_ids"))
@@ -33,10 +33,6 @@ object SessionDuration extends Main {
       .toArray()        //This will need optimisation
 
     val previousSessions = spark.read
-      .format("com.databricks.spark.redshift")
-              .option("forward_spark_s3_credentials", "true")
-              .option("tempformat", "CSV")
-              .option("tempdir", "s3n://test-dce-cluster")
       .redshift(spark)
       .option("dbtable", "session_duration")
       .load()

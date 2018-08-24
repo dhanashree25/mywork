@@ -23,7 +23,7 @@ object VoDPlay extends Main {
 
     // TODO: Add support for stream events
     val df = events.where(col("payload.action") === Action.VOD_PROGRESS)
-      .join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
+      .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     val newSessions = df
       .select(collect_set(col("payload.cid")).as("session_ids"))

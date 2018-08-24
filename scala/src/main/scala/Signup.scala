@@ -29,7 +29,7 @@ object Signup extends Main{
     val event_count = events.count()
 
     val df = events.where(col("payload.data.TA") === ActionType.REGISTER_USER)
-      .join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
+      .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     spark.sql("set spark.sql.caseSensitive=true")
     val signupdf = df.filter(col("realm_id").isNotNull)

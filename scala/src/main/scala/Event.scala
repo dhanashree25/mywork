@@ -26,7 +26,7 @@ object Event extends Main {
     // TODO: Add support for stream events
 
     val df = events.where(col("payload.data.ta").isin(ActionType.EVENT_WENT_LIVE, ActionType.EVENT_WENT_NOTLIVE))
-      .join(realms, events.col("realm") === realms.col("name"), "left_outer").cache()
+      .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     val updates = df.filter(col("realm_id").isNotNull)
 
