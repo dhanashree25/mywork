@@ -20,7 +20,9 @@ object LivePlay extends Main {
       case None => System.exit(1)
     }
 
-    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    val events_raw = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+
+    val events = events_raw.filter(col("payload.cid").isNotNull and col("payload.cid")=!="")
 
     val df = events.where(col("payload.action") === Action.LIVE_WATCHING)
       .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
@@ -100,8 +102,14 @@ object LivePlay extends Main {
 
     val misseddf = df
       .filter(col("realm_id").isNull)
-    print("-----Missed Live events------" + misseddf.count() )
+    println("-----Missed Live events------" + misseddf.count() )
     misseddf.collect.foreach(println)
+
+    val invalid_sessions = events_raw.where(col("payload.action")=== Action.LIVE_WATCHING)
+      .filter(col("payload.cid").isNull or col("payload.cid")==="")
+    println("---------Invalid Sessions---------" + invalid_sessions.count())
+    invalid_sessions.collect.foreach(println)
+
 
     if (!cli.dryRun) {
           print("Writing to table")
