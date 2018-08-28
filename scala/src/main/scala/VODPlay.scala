@@ -22,7 +22,7 @@ object VoDPlay extends Main {
     val events_raw = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
     val events = events_raw.where(col("payload.action") === Action.VOD_PROGRESS).cache()
-    
+
     // TODO: Add support for stream events
     val df = events.filter(col("payload.cid").isNotNull and col("payload.cid")=!="")
       .join(realms, col("realm") === realms.col("name"), "left_outer").cache()

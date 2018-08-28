@@ -75,7 +75,7 @@ object SessionDuration extends Main {
       .filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
-        col("payload.cid").cast(StringType).alias("session_id"),
+        col("payload.cid").alias("session_id"),
         col("customerId").alias("customer_id"),
         col("payload.progress").alias( "duration"),
         to_timestamp(col("payload.data.startedAt") / 1000).alias("started_at"),
