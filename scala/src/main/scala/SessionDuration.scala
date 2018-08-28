@@ -2,6 +2,7 @@ import com.diceplatform.brain._
 import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StringType
 
 object SessionDuration extends Main {
   def main(args: Array[String]): Unit = {
@@ -20,7 +21,13 @@ object SessionDuration extends Main {
       case None => System.exit(1)
     }
 
-    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    val events_raw = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+
+    val events = events_raw.filter(col("payload.cid").isNotNull)
+
+    val invalid_sessions = events_raw.filter(col("payload.cid").isNull)
+
+    print(invalid_sessions.collect())
 
     // TODO: Add support for stream events
     val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS).join(realms, col("realm") === realms.col("name"), "left_outer").cache()
@@ -43,7 +50,7 @@ object SessionDuration extends Main {
       .filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
-        col("payload.cid").alias("session_id"),
+        col("payload.cid").cast(StringType).alias("session_id"),
         col("customerId").alias("customer_id"),
         col("payload.progress").alias("duration"),
         to_timestamp(col("payload.data.startedAt") / 1000).alias("started_at"),
@@ -72,7 +79,7 @@ object SessionDuration extends Main {
       .filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
-        col("payload.cid").alias("session_id"),
+        col("payload.cid").cast(StringType).alias("session_id"),
         col("customerId").alias("customer_id"),
         col("payload.progress").alias( "duration"),
         to_timestamp(col("payload.data.startedAt") / 1000).alias("started_at"),
@@ -115,13 +122,13 @@ object SessionDuration extends Main {
     val misseddf = vod_df.filter(col("realm_id").isNull)
                     .union (live_df.filter(col("realm_id").isNull))
 
-    print("-----total------" + events.count() + "-----payments------" + updates.count())
+    print("-----total------" + events.count() + "-----sessions------" + updates.count())
 
     print("-----Missed sessions------" + misseddf.count() )
     misseddf.collect.foreach(println)
 
     if (!cli.dryRun) {
-          print("Writing to table")
+          println("Writing to table")
            updates
             .write
             .redshift(spark)
@@ -131,5 +138,8 @@ object SessionDuration extends Main {
     } else {
       updates.show()
     }
+
+//    println("Invalid sessions")
+//    invalid_sessions.collect.foreach(println)
   }
 }
