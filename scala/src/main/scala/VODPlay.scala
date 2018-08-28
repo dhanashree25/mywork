@@ -21,10 +21,10 @@ object VoDPlay extends Main {
 
     val events_raw = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
 
-    val events = events_raw.filter(col("payload.cid").isNotNull and col("payload.cid")=!="")
-
+    val events = events_raw.where(col("payload.action") === Action.VOD_PROGRESS).cache()
+    
     // TODO: Add support for stream events
-    val df = events.where(col("payload.action") === Action.VOD_PROGRESS)
+    val df = events.filter(col("payload.cid").isNotNull and col("payload.cid")=!="")
       .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     val newSessions = df
@@ -74,8 +74,7 @@ object VoDPlay extends Main {
     print("-----Missed VoD plays------" + misseddf.count())
     misseddf.collect.foreach(println)
 
-    val invalid_sessions = events_raw.where(col("payload.action") === Action.VOD_PROGRESS)
-      .filter(col("payload.cid").isNull or col("payload.cid")==="")
+    val invalid_sessions = events.filter(col("payload.cid").isNull or col("payload.cid")==="")
     println("---------Invalid Sessions---------" + invalid_sessions.count())
     invalid_sessions.collect.foreach(println)
 
