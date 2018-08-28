@@ -2,6 +2,7 @@ import com.diceplatform.brain._
 import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.StringType
 
 object SessionDuration extends Main {
   def main(args: Array[String]): Unit = {
@@ -20,7 +21,9 @@ object SessionDuration extends Main {
       case None => System.exit(1)
     }
 
-    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    val events_raw = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+
+    val events = events_raw.filter(col("payload.cid").isNotNull and col("payload.cid")=!="")
 
     // TODO: Add support for stream events
     val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS).join(realms, col("realm") === realms.col("name"), "left_outer").cache()
@@ -112,16 +115,20 @@ object SessionDuration extends Main {
         col("town")
       )
 
+    print("-----total------" + events.count() + "-----sessions------" + updates.count())
+
     val misseddf = vod_df.filter(col("realm_id").isNull)
-                    .union (live_df.filter(col("realm_id").isNull))
-
-    print("-----total------" + events.count() + "-----payments------" + updates.count())
-
+      .union (live_df.filter(col("realm_id").isNull))
     print("-----Missed sessions------" + misseddf.count() )
     misseddf.collect.foreach(println)
 
+    val invalid_sessions = events_raw.where(col("payload.action").isin(Action.VOD_PROGRESS, Action.LIVE_WATCHING))
+      .filter(col("payload.cid").isNull or col("payload.cid")==="")
+    println("---------Invalid Sessions---------" + invalid_sessions.count())
+    invalid_sessions.collect.foreach(println)
+
     if (!cli.dryRun) {
-          print("Writing to table")
+          println("Writing to table")
            updates
             .write
             .redshift(spark)
@@ -129,7 +136,9 @@ object SessionDuration extends Main {
             .mode(SaveMode.Append)
             .save()
     } else {
-      updates.show()
+      updates.collect.foreach(println)
+
     }
+
   }
 }

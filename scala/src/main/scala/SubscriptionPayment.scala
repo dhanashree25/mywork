@@ -2,6 +2,7 @@ import com.diceplatform.brain._
 import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.IntegerType
 
 object SubscriptionPayment extends Main {
   def main(args: Array[String]): Unit = {
@@ -54,7 +55,7 @@ object SubscriptionPayment extends Main {
                         col("country"),
                         col("ts"),
                         col("payment_provider"),
-                        col("amount_with_tax"),
+                        col("amount_with_tax").cast(IntegerType),
                         col("currency"),
                         col("sku"),
                         col("payment_id"))
