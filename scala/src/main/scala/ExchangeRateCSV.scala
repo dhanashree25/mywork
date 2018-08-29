@@ -68,6 +68,16 @@ object ExchangeRateCSV extends Main {
       .optional()
       .action((x, c) => c.copy(show = x) )
       .text("The number of records to show during dry run")
+
+    opt[String]("s3-bucket")
+      .optional()
+      .action((x, c) => c.copy(s3Bucket = x) )
+      .text("The S3 bucket to download the exchange rate to")
+
+     opt[String]("s3-path")
+      .optional()
+      .action((x, c) => c.copy(s3Path = x) )
+      .text("The S3 parent path to download the exchange rate to")
   }
 
   val RANDOM_STRING_LENGTH = 5
