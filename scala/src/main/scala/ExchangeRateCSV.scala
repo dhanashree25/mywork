@@ -3,7 +3,7 @@ import java.net.URL
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import java.nio.file.{Files}
+import java.nio.file.Files
 
 import com.diceplatform.brain.implicits._
 
