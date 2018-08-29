@@ -5,6 +5,7 @@ import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
 import java.nio.file.Files
 
+import com.amazonaws.services.s3.AmazonS3Client
 import com.diceplatform.brain.implicits._
 
 case class ExchangeRateConfig(
@@ -14,7 +15,9 @@ case class ExchangeRateConfig(
   header: Boolean = true,
   date: String = "",
   dateFormat: String = "dd MMM yyyy",
-  dbTable: String = "exchange_rates",
+  dbTable: String = "exchange_rate",
+  s3Bucket: String = "test-dce-spark",
+  s3Path: String = "eurofxref",
   show: Int = 20
 )
 
@@ -90,14 +93,24 @@ object ExchangeRateCSV extends Main {
       throw new Exception("More than one file extracted")
     }
 
-    println("Downloaded ZIP to", zipPath.toString)
-    println("Unzipped CSV to", zipDir.toString)
+    val bucket = cli.s3Bucket
+    val filepath = s"${cli.s3Path}/${cli.date}.csv"
+
+    val s3 = new AmazonS3Client()
+    s3.putObject(bucket, filepath, files.head.toFile)
+
+    println(s"Downloaded ZIP to ${zipPath.toString}")
+    println(s"Unzipped CSV to ${zipDir.toString}")
+
+    val file = s"s3://$bucket/$filepath"
+
+    println(s"Reading file $file")
 
     val csv = spark.read
       .option("header", value=cli.header)
       .option("sep", value=cli.separator)
       .option("inferSchema", value=true)
-      .csv(files.head.toString)
+      .csv(file)
 
     var exchangeRate = selectExchangeRates(csv, cli.dateFormat)
 
