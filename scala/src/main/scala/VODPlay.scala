@@ -38,7 +38,7 @@ object VoDPlay extends Main {
       .load()
       .where(col("session_id").isin(newSessions:_*))
 
-    val updates = df
+    val vod_df = df
       .filter(col("realm_id").isNotNull)
       .select(
         col("realm_id"),
@@ -68,6 +68,20 @@ object VoDPlay extends Main {
         max("end_at").alias("end_at")
       )
 
+    val updates = vod_df.
+      select(
+        col("realm_id"),
+        col("session_id"),
+        col("customer_id"),
+        col("video_id"),
+        col("duration"),
+        col("started_at"),
+        col("start_at"),
+        col("end_at"),
+        col("country"),
+        col("town")
+      ).cache()
+
     print("-----total------" + events.count() + "-----payments------" + updates.count())
 
     val misseddf = df.filter(col("realm_id").isNull)
@@ -87,7 +101,7 @@ object VoDPlay extends Main {
             .mode(SaveMode.Append)
             .save()
     } else {
-      updates.show()
+      updates.collect.foreach(println)
     }
   }
 }

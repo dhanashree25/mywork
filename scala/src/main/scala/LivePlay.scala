@@ -68,7 +68,7 @@ object LivePlay extends Main {
       )
       .withColumn("duration",unix_timestamp(col("end_at"))-unix_timestamp(col("start_at")))
 
-    val reorderedColumnNames: Array[String] = Array("realm_id",
+    val reorderedColumnNames = List("realm_id",
                                                  "session_id",
                                                  "customer_id",
                                                  "video_id",
@@ -80,7 +80,7 @@ object LivePlay extends Main {
                                                  "country",
                                                  "town")
 
-    val updates = live_updates.select(reorderedColumnNames.head, reorderedColumnNames.tail: _*).union(previousPlays)
+    val final_df = live_updates.select(reorderedColumnNames.head, reorderedColumnNames.tail: _*).union(previousPlays)
       .groupBy(
         col("realm_id"),
         col("session_id"), // TODO: Consider removing
@@ -96,6 +96,8 @@ object LivePlay extends Main {
         min("start_at").alias("start_at"),
         max("end_at").alias("end_at")
       )
+
+    val updates = final_df.select(reorderedColumnNames.head, reorderedColumnNames.tail: _*).cache()
 
     val updates_count=  updates.count()
     print("-----total------",events.count(),"-----live------", updates_count)
@@ -119,7 +121,7 @@ object LivePlay extends Main {
             .mode(SaveMode.Append)
             .save()
     } else {
-      updates.show()
+      updates.collect.foreach(println)
     }
   }
 }
