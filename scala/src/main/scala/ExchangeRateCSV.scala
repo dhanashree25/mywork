@@ -103,7 +103,11 @@ object ExchangeRateCSV extends Main {
     }
 
     val bucket = cli.s3Bucket
-    val filepath = s"${cli.s3Path}/${cli.date}.csv"
+    val filename = cli.date.trim match {
+      case "" => "historical"
+      case _  => cli.date
+    }
+    val filepath = s"${cli.s3Path}/$filename.csv"
 
     val s3 = new AmazonS3Client()
     s3.putObject(bucket, filepath, files.head.toFile)
