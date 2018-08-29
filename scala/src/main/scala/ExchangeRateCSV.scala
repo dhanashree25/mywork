@@ -3,8 +3,9 @@ import java.net.URL
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
-import java.nio.file.{Files}
+import java.nio.file.Files
 
+import com.amazonaws.services.s3.AmazonS3Client
 import com.diceplatform.brain.implicits._
 
 case class ExchangeRateConfig(
@@ -14,7 +15,9 @@ case class ExchangeRateConfig(
   header: Boolean = true,
   date: String = "",
   dateFormat: String = "dd MMM yyyy",
-  dbTable: String = "exchange_rates",
+  dbTable: String = "exchange_rate",
+  s3Bucket: String = "test-dce-spark",
+  s3Path: String = "eurofxref",
   show: Int = 20
 )
 
@@ -48,7 +51,6 @@ object ExchangeRateCSV extends Main {
 
     opt[String]("date")
       .action((x, c) => c.copy(date = x) )
-      .required()
       .text("The date of exchange rates to process, this is usually only used on daily exchange rates CSV")
 
     opt[String]("date-format")
@@ -65,6 +67,16 @@ object ExchangeRateCSV extends Main {
       .optional()
       .action((x, c) => c.copy(show = x) )
       .text("The number of records to show during dry run")
+
+    opt[String]("s3-bucket")
+      .optional()
+      .action((x, c) => c.copy(s3Bucket = x) )
+      .text("The S3 bucket to download the exchange rate to")
+
+     opt[String]("s3-path")
+      .optional()
+      .action((x, c) => c.copy(s3Path = x) )
+      .text("The S3 parent path to download the exchange rate to")
   }
 
   val RANDOM_STRING_LENGTH = 5
@@ -80,7 +92,7 @@ object ExchangeRateCSV extends Main {
     val prefix = generator.take(RANDOM_STRING_LENGTH).mkString("")
 
     val zipURL = new URL(cli.url)
-    val zipPath = Files.createTempFile(prefix, "zip")
+    val zipPath = Files.createTempFile(prefix, ".zip")
     val zipDir = Files.createTempDirectory(prefix)
 
     DownloadUtil.download(zipURL, zipPath)
@@ -90,14 +102,28 @@ object ExchangeRateCSV extends Main {
       throw new Exception("More than one file extracted")
     }
 
-    println("Downloaded ZIP to", zipPath.toString)
-    println("Unzipped CSV to", zipDir.toString)
+    val bucket = cli.s3Bucket
+    val filename = cli.date.trim match {
+      case "" => "historical"
+      case _  => cli.date
+    }
+    val filepath = s"${cli.s3Path}/$filename.csv"
+
+    val s3 = new AmazonS3Client()
+    s3.putObject(bucket, filepath, files.head.toFile)
+
+    println(s"Downloaded ZIP to ${zipPath.toString}")
+    println(s"Unzipped CSV to ${zipDir.toString}")
+
+    val file = s"s3://$bucket/$filepath"
+
+    println(s"Reading file $file")
 
     val csv = spark.read
       .option("header", value=cli.header)
       .option("sep", value=cli.separator)
       .option("inferSchema", value=true)
-      .csv(files.head.toString)
+      .csv(file)
 
     var exchangeRate = selectExchangeRates(csv, cli.dateFormat)
 
@@ -111,8 +137,14 @@ object ExchangeRateCSV extends Main {
       }
     }
 
+    exchangeRate = exchangeRate.select(
+      col("date"),
+      col("currency"),
+      col("rate")
+    )
+
     if (!cli.dryRun) {
-      csv
+      exchangeRate
         .write
         .redshift(spark)
         .option("dbtable", cli.dbTable)
