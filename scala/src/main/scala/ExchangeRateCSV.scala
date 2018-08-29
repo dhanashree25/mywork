@@ -112,7 +112,7 @@ object ExchangeRateCSV extends Main {
     }
 
     if (!cli.dryRun) {
-      csv
+      exchangeRate
         .write
         .redshift(spark)
         .option("dbtable", cli.dbTable)
