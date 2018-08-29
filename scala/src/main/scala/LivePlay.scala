@@ -68,7 +68,7 @@ object LivePlay extends Main {
       )
       .withColumn("duration",unix_timestamp(col("end_at"))-unix_timestamp(col("start_at")))
 
-    val reorderedColumnNames: Array[String] = Array("realm_id",
+    val reorderedColumnNames = List("realm_id",
                                                  "session_id",
                                                  "customer_id",
                                                  "video_id",
@@ -97,19 +97,7 @@ object LivePlay extends Main {
         max("end_at").alias("end_at")
       )
 
-    val updates = final_df.select(
-     "realm_id",
-      "session_id",
-      "customer_id",
-      "video_id",
-      "device",
-      "duration",
-      "started_at",
-      "start_at",
-      "end_at",
-      "country",
-      "town"
-    ).cache()
+    val updates = final_df.select(reorderedColumnNames.head, reorderedColumnNames.tail: _*).cache()
 
     val updates_count=  updates.count()
     print("-----total------",events.count(),"-----live------", updates_count)
