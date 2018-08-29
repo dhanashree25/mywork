@@ -124,6 +124,12 @@ object ExchangeRateCSV extends Main {
       }
     }
 
+    exchangeRate = exchangeRate.select(
+      col("date"),
+      col("currency"),
+      col("rate")
+    )
+
     if (!cli.dryRun) {
       exchangeRate
         .write
