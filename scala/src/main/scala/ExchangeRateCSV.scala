@@ -51,7 +51,6 @@ object ExchangeRateCSV extends Main {
 
     opt[String]("date")
       .action((x, c) => c.copy(date = x) )
-      .required()
       .text("The date of exchange rates to process, this is usually only used on daily exchange rates CSV")
 
     opt[String]("date-format")
