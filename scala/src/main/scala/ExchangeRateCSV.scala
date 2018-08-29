@@ -80,7 +80,7 @@ object ExchangeRateCSV extends Main {
     val prefix = generator.take(RANDOM_STRING_LENGTH).mkString("")
 
     val zipURL = new URL(cli.url)
-    val zipPath = Files.createTempFile(prefix, "zip")
+    val zipPath = Files.createTempFile(prefix, ".zip")
     val zipDir = Files.createTempDirectory(prefix)
 
     DownloadUtil.download(zipURL, zipPath)
