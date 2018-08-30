@@ -33,6 +33,8 @@ object EventDateBucket extends Main {
 
     val counts = updates.groupBy("date").agg(count("date")).orderBy("date")
 
+    println("------------Total------------" + total)
+
     println(" --------------Distinct dates from processed day---------")
     counts.collect.foreach(println)
 
@@ -44,8 +46,7 @@ object EventDateBucket extends Main {
           .partitionBy("year", "month", "day", "hour")
           .save("s3n://dce-spark-data-prod/")
     } else {
-      counts.collect.foreach(println)
-      print (total)
+      updates.show()
     }
   }
 }
