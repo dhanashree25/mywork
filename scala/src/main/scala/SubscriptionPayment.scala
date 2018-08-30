@@ -58,7 +58,7 @@ object SubscriptionPayment extends Main {
                         col("country"),
                         col("ts"),
                         col("payment_provider"),
-                        col("amount_with_tax").cast(IntegerType), //To-do:
+                        col("amount_with_tax").cast(IntegerType), // To-do: check if need float
                         col("currency"),
                         col("sku"),
                         col("payment_id"))
