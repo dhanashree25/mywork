@@ -4,7 +4,6 @@ import com.diceplatform.brain.implicits._
 
 case class Config(path: String = "", dryRun: Boolean = false)
 case class CSVConfig(path: String = "", dryRun: Boolean = false, separator: String = ",", header:Boolean = true)
-case class DateBucketConfig(path: String = "", dryRun: Boolean = false, dateBucket: String = "")
 
 class Main {
   /**
@@ -76,22 +75,4 @@ class Main {
     }
   }
 
-  lazy val bucketParser: scopt.OptionParser[DateBucketConfig] = {
-    new scopt.OptionParser[DateBucketConfig]("scopt") {
-      opt[String]("path")
-        .action((x, c) => c.copy(path = x) )
-        .text("path to files, local or remote")
-        .required()
-
-      opt[Boolean]("dry-run")
-        .action((x, c) => c.copy(dryRun = x) )
-        .optional()
-        .text("dry run")
-
-      opt[String]("date-bucket")
-        .action((x, c) => c.copy(dateBucket = x) )
-        .text("path to date bucket, required only for EventDateBucket job")
-        .optional()
-    }
-  }
 }

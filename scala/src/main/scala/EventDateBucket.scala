@@ -1,11 +1,30 @@
-import SubscriptionPayment.{realms, spark}
 import com.diceplatform.brain._
 import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 
+case class DateBucketConfig(path: String = "", dryRun: Boolean = false, dateBucket: String = "")
+
 object EventDateBucket extends Main {
   def main(args: Array[String]): Unit = {
+    lazy val bucketParser: scopt.OptionParser[DateBucketConfig] = {
+      new scopt.OptionParser[DateBucketConfig]("scopt") {
+        opt[String]("path")
+          .action((x, c) => c.copy(path = x) )
+          .text("path to files, local or remote")
+          .required()
+
+        opt[Boolean]("dry-run")
+          .action((x, c) => c.copy(dryRun = x) )
+          .optional()
+          .text("dry run")
+
+        opt[String]("date-bucket")
+          .action((x, c) => c.copy(dateBucket = x) )
+          .text("path to date bucket, required only for EventDateBucket job")
+          .optional()
+      }
+    }
     val parser = bucketParser
 
     parser.head(
@@ -34,12 +53,12 @@ object EventDateBucket extends Main {
     misseddf.collect.foreach(println)
 
     val updates = df.filter(col("realm_id").isNotNull)
-      .withColumn("bucket.ts", to_utc_timestamp(col("ts"), "yyyy-MM-dd hh:mm:ss"))
-      .withColumn("bucket.date", date_format(col("ts"), "yyyy-MM-dd"))
-      .withColumn("bucket.year", date_format(col("ts"), "yyyy" ))
-      .withColumn("bucket.month", date_format(col("ts"), "MM" ))
-      .withColumn("bucket.day", date_format(col("ts"), "dd" ))
-      .withColumn("bucket.hour", date_format(col("ts"), "HH" )).cache()
+      .withColumn("bucket_ts", to_utc_timestamp(col("ts"), "yyyy-MM-dd hh:mm:ss"))
+      .withColumn("date", date_format(col("bucket_ts"), "yyyy-MM-dd"))
+      .withColumn("year", date_format(col("bucket_ts"), "yyyy" ))
+      .withColumn("bucket.month", date_format(col("bucket_ts"), "MM" ))
+      .withColumn("bucket.day", date_format(col("bucket_ts"), "dd" ))
+      .withColumn("bucket.hour", date_format(col("bucket_ts"), "HH" )).cache()
 
     val counts = updates.groupBy("date").agg(count("date")).orderBy("date")
 
@@ -53,7 +72,7 @@ object EventDateBucket extends Main {
         updates.write
           .mode("append")
           .format("json")
-          .partitionBy("bucket.year", "bucket.month", "bucket.day", "bucket.hour")
+          .partitionBy("year", "month", "day", "hour")
           .save(cli.dateBucket)
     } else {
       updates.show()
