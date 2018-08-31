@@ -56,9 +56,9 @@ object EventDateBucket extends Main {
       .withColumn("bucket_ts", to_utc_timestamp(col("ts"), "yyyy-MM-dd hh:mm:ss"))
       .withColumn("date", date_format(col("bucket_ts"), "yyyy-MM-dd"))
       .withColumn("year", date_format(col("bucket_ts"), "yyyy" ))
-      .withColumn("bucket.month", date_format(col("bucket_ts"), "MM" ))
-      .withColumn("bucket.day", date_format(col("bucket_ts"), "dd" ))
-      .withColumn("bucket.hour", date_format(col("bucket_ts"), "HH" )).cache()
+      .withColumn("month", date_format(col("bucket_ts"), "MM" ))
+      .withColumn("day", date_format(col("bucket_ts"), "dd" ))
+      .withColumn("hour", date_format(col("bucket_ts"), "HH" )).cache()
 
     val counts = updates.groupBy("date").agg(count("date")).orderBy("date")
 
