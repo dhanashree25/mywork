@@ -54,7 +54,7 @@ object EventDateBucket extends Main {
           .mode("append")
           .format("json")
           .partitionBy("year", "month", "day", "hour")
-          .save("s3n://dce-spark-data-prod/")
+          .save(cli.dateBucket)
     } else {
       updates.show()
     }

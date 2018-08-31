@@ -2,7 +2,7 @@ import org.apache.spark._
 import org.apache.spark.sql._
 import com.diceplatform.brain.implicits._
 
-case class Config(path: String = "", dryRun: Boolean = false)
+case class Config(path: String = "", dryRun: Boolean = false, dateBucket: String = "")
 case class CSVConfig(path: String = "", dryRun: Boolean = false, separator: String = ",", header:Boolean = true)
 
 class Main {
@@ -51,6 +51,11 @@ class Main {
         .action((x, c) => c.copy(dryRun = x) )
         .optional()
         .text("dry run")
+
+      opt[String]("date-bucket")
+        .action((x, c) => c.copy(dateBucket = x) )
+        .text("path to date bucket, required only for EventDateBucket job")
+        .optional()
     }
   }
 
