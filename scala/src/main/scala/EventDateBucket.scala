@@ -6,7 +6,7 @@ import org.apache.spark.sql.functions._
 
 object EventDateBucket extends Main {
   def main(args: Array[String]): Unit = {
-    val parser = defaultParser
+    val parser = bucketParser
 
     parser.head(
       """Extract-Transform-Load (ETL) task for events
@@ -15,7 +15,7 @@ object EventDateBucket extends Main {
       """.stripMargin
     )
 
-    var cli: Config = Config()
+    var cli: DateBucketConfig = DateBucketConfig()
     parser.parse(args, cli) match {
       case Some(c) => cli = c
       case None => System.exit(1)
@@ -34,12 +34,12 @@ object EventDateBucket extends Main {
     misseddf.collect.foreach(println)
 
     val updates = df.filter(col("realm_id").isNotNull)
-      .withColumn("ts", to_utc_timestamp(col("ts"), "yyyy-MM-dd hh:mm:ss"))
-      .withColumn("date", date_format(col("ts"), "yyyy-MM-dd"))
-      .withColumn("year", date_format(col("ts"), "yyyy" ))
-      .withColumn("month", date_format(col("ts"), "MM" ))
-      .withColumn("day", date_format(col("ts"), "dd" ))
-      .withColumn("hour", date_format(col("ts"), "HH" )).cache()
+      .withColumn("bucket.ts", to_utc_timestamp(col("ts"), "yyyy-MM-dd hh:mm:ss"))
+      .withColumn("bucket.date", date_format(col("ts"), "yyyy-MM-dd"))
+      .withColumn("bucket.year", date_format(col("ts"), "yyyy" ))
+      .withColumn("bucket.month", date_format(col("ts"), "MM" ))
+      .withColumn("bucket.day", date_format(col("ts"), "dd" ))
+      .withColumn("bucket.hour", date_format(col("ts"), "HH" )).cache()
 
     val counts = updates.groupBy("date").agg(count("date")).orderBy("date")
 
@@ -53,7 +53,7 @@ object EventDateBucket extends Main {
         updates.write
           .mode("append")
           .format("json")
-          .partitionBy("year", "month", "day", "hour")
+          .partitionBy("bucket.year", "bucket.month", "bucket.day", "bucket.hour")
           .save(cli.dateBucket)
     } else {
       updates.show()

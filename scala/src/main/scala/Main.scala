@@ -2,8 +2,9 @@ import org.apache.spark._
 import org.apache.spark.sql._
 import com.diceplatform.brain.implicits._
 
-case class Config(path: String = "", dryRun: Boolean = false, dateBucket: String = "")
+case class Config(path: String = "", dryRun: Boolean = false)
 case class CSVConfig(path: String = "", dryRun: Boolean = false, separator: String = ",", header:Boolean = true)
+case class DateBucketConfig(path: String = "", dryRun: Boolean = false, dateBucket: String = "")
 
 class Main {
   /**
@@ -51,11 +52,6 @@ class Main {
         .action((x, c) => c.copy(dryRun = x) )
         .optional()
         .text("dry run")
-
-      opt[String]("date-bucket")
-        .action((x, c) => c.copy(dateBucket = x) )
-        .text("path to date bucket, required only for EventDateBucket job")
-        .optional()
     }
   }
 
@@ -77,6 +73,25 @@ class Main {
       opt[Boolean]("header")
         .action((x, c) => c.copy(header = x) )
         .text("whether to use the header (first line) as column names, default is true")
+    }
+  }
+
+  lazy val bucketParser: scopt.OptionParser[DateBucketConfig] = {
+    new scopt.OptionParser[DateBucketConfig]("scopt") {
+      opt[String]("path")
+        .action((x, c) => c.copy(path = x) )
+        .text("path to files, local or remote")
+        .required()
+
+      opt[Boolean]("dry-run")
+        .action((x, c) => c.copy(dryRun = x) )
+        .optional()
+        .text("dry run")
+
+      opt[String]("date-bucket")
+        .action((x, c) => c.copy(dateBucket = x) )
+        .text("path to date bucket, required only for EventDateBucket job")
+        .optional()
     }
   }
 }
