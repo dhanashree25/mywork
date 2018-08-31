@@ -23,14 +23,14 @@ object SubscriptionPayment extends Main {
       case None => System.exit(1)
     }
 
-    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    val events = spark.read.json(cli.path)
 
     val events_count = events.count()
 
     val df = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
       .join(realms, col("realm") === realms.col("name"), "left_outer")
 
-    val updates = df.filter(col("realm_id").isNotNull)
+    val updates = df
                     .select(
                       col("customerId").alias("customer_id"),
                       col("realm_id"),
@@ -58,7 +58,7 @@ object SubscriptionPayment extends Main {
                         col("country"),
                         col("ts"),
                         col("payment_provider"),
-                        col("amount_with_tax").cast(IntegerType), // To-do: check if need float
+                        col("amount_with_tax").cast(IntegerType),
                         col("currency"),
                         col("sku"),
                         col("payment_id"))
@@ -78,12 +78,6 @@ object SubscriptionPayment extends Main {
                         col("cancelled"))
 
     print("-----total------" + events_count + "-----payments------" + updates.count())
-
-    val misseddf = {
-      df.filter(col("realm_id").isNull)
-    }
-    print("-----Missed Payments------" + misseddf.count() )
-    misseddf.collect.foreach(println)
 
     if (!cli.dryRun) {
       payments

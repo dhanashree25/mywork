@@ -1,3 +1,4 @@
+import SubscriptionPayment.{realms, spark}
 import com.diceplatform.brain._
 import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
@@ -20,11 +21,20 @@ object EventDateBucket extends Main {
       case None => System.exit(1)
     }
 
-    val df = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+
+    val df = events.join(realms, col("realm") === realms.col("name"), "left_outer")
 
     val total = df.count()
 
-    val updates = df.withColumn("ts", to_utc_timestamp(col("ts"), "yyyy-MM-dd hh:mm:ss"))
+    val misseddf = {
+      df.filter(col("realm_id").isNull)
+    }
+    print("-----Missed Payments------" + misseddf.count() )
+    misseddf.collect.foreach(println)
+
+    val updates = df.filter(col("realm_id").isNotNull)
+      .withColumn("ts", to_utc_timestamp(col("ts"), "yyyy-MM-dd hh:mm:ss"))
       .withColumn("date", date_format(col("ts"), "yyyy-MM-dd"))
       .withColumn("year", date_format(col("ts"), "yyyy" ))
       .withColumn("month", date_format(col("ts"), "MM" ))
