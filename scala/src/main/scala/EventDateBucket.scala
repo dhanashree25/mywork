@@ -69,13 +69,13 @@ object EventDateBucket extends Main {
 
     if (!cli.dryRun) {
       print("Writing to table")
-        updates.write
+        updates.drop("bucket_ts").write
           .mode("append")
           .format("json")
           .partitionBy("year", "month", "day", "hour")
           .save(cli.dateBucket)
     } else {
-      updates.show()
+      updates.drop("bucket_ts").show()
     }
   }
 }
