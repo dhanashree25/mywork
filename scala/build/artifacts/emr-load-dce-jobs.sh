@@ -5,10 +5,12 @@ set -u -e -x
 if [ -z "${var_date-}" ]; then
   var_date=$(psql --tuples-only --command="select to_char(max(start_at), 'YYYY/mm/dd') from event;" || false)
   var_date=$(echo "${var_date}" | tr -d ' ')
+  var_path = $(date -d $var_date +year=%Y/month=%m/day=%d)
 fi
 
 if [ -z "${var_date-}" ]; then
   var_date=$(date -d "yesterday" +%Y/%m/%d)
+  var_path =$(date -d "yesterday" +year=%Y/month=%m/day=%d)
 fi
 
 echo "Processing date ${var_date}"
@@ -35,6 +37,7 @@ var_version=$(cat version)
 for FILE in $FILES; do
   sed -i "s@var_date@$var_date@g" "${FILE}"
   sed -i "s@var_version@$var_version@g" "${FILE}"
+  sed -i "s@var_path@$var_path@g" "${FILE}"
 
   consul-template \
     -consul-ssl="${CONSUL_SECURE}" \

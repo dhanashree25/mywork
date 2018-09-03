@@ -74,4 +74,5 @@ class Main {
         .text("whether to use the header (first line) as column names, default is true")
     }
   }
+
 }

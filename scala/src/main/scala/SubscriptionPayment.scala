@@ -2,7 +2,8 @@ import com.diceplatform.brain._
 import com.diceplatform.brain.implicits._
 import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.IntegerType
+import org.apache.spark.sql.types._
+
 
 object SubscriptionPayment extends Main {
   def main(args: Array[String]): Unit = {
@@ -22,15 +23,14 @@ object SubscriptionPayment extends Main {
       case None => System.exit(1)
     }
 
-    val events = spark.read.jsonSingleLine(spark, cli.path, Schema.root)
+    val events = spark.read.json(cli.path)
 
     val events_count = events.count()
 
     val df = events.where(col("payload.data.TA") === ActionType.SUCCESSFUL_PURCHASE)
-      .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
+      .join(realms, col("realm") === realms.col("name"), "left_outer")
 
     val updates = df
-                    .filter(col("realm_id").isNotNull)
                     .select(
                       col("customerId").alias("customer_id"),
                       col("realm_id"),
@@ -45,7 +45,10 @@ object SubscriptionPayment extends Main {
                       col("payload.data.SKU").alias("sku"),
                       col("payload.data.REVOKED").alias("revoked"),
                       col("payload.data.CANCELLED").alias("cancelled")
-                    ).withColumn("payment_id" , monotonically_increasing_id)
+                    )
+                    .distinct()
+                    .withColumn("payment_id" , monotonically_increasing_id)
+                    .cache()
 
     val payments = updates
                      .select(
@@ -75,10 +78,6 @@ object SubscriptionPayment extends Main {
                         col("cancelled"))
 
     print("-----total------" + events_count + "-----payments------" + updates.count())
-
-    val misseddf = df.filter(col("realm_id").isNull)
-    print("-----Missed Payments------" + misseddf.count() )
-    misseddf.collect.foreach(println)
 
     if (!cli.dryRun) {
       payments
