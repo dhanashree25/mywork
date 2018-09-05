@@ -26,7 +26,7 @@ object VODCatalogue extends Main {
 
     val events_count = events.count()
 
-    val df = events.where(col("payload.data.ta").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
+    val df = events.where(col("payload.data.TA").isin(ActionType.UPDATED_VOD, ActionType.NEW_VOD_FROM_DVE))
       .join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
     val updates = df
@@ -42,7 +42,7 @@ object VODCatalogue extends Main {
         col("payload.data.v.deleted"),
         col("payload.data.v.draft"),
         UDF.mkString(col("payload.data.v.tags")).alias("tags"),
-        when(col("payload.data.ta") === ActionType.NEW_VOD_FROM_DVE, col("ts"))
+        when(col("payload.data.TA") === ActionType.NEW_VOD_FROM_DVE, col("ts"))
           .otherwise(lit(null))
           .alias("imported_at"),
         col("ts").alias("updated_at")
