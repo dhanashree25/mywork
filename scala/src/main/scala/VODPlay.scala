@@ -82,7 +82,7 @@ object VoDPlay extends Main {
         col("town")
       ).cache()
 
-    print("-----total------" + events.count() + "-----payments------" + updates.count())
+    print("-----total------" + events.count() + "-----vod_plays------" + updates.count())
 
     val misseddf = df.filter(col("realm_id").isNull)
     print("-----Missed VoD plays------" + misseddf.count())
