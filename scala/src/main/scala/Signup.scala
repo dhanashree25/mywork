@@ -45,7 +45,7 @@ object Signup extends Main{
     print("-----total------" + event_count + "-----signups------" + signupdf_count)
 
     val missed_signups = df.filter(col("realm_id").isNull)
-    print("-----Missed Signups------" + missed_signups.count() )
+    print("-----Missed Signups------" + missed_signups.count())
     missed_signups.collect.foreach(println)
 
     if (!cli.dryRun) {
