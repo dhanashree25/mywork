@@ -29,18 +29,6 @@ object SessionDuration extends Main {
     val vod_df = events.where(col("payload.action") === Action.VOD_PROGRESS).join(realms, col("realm") === realms.col("name"), "left_outer").cache()
     val live_df = events.where(col("payload.action") === Action.LIVE_WATCHING).join(realms, col("realm") === realms.col("name"), "left_outer").cache()
 
-    val newSessions = events.where(col("payload.action").isin(Action.VOD_PROGRESS, Action.LIVE_WATCHING))
-      .select(collect_set(col("payload.cid")).as("session_ids"))
-      .first()
-      .getList[String](0)
-      .toArray()        //This will need optimisation
-
-    val previousSessions = spark.read
-      .redshift(spark)
-      .option("dbtable", "session_duration")
-      .load()
-      .where(col("session_id").isin(newSessions:_*)) // this will need to be optimised
-
     // progress for vod is more significant than calculated duration
     val vod_updates = vod_df
       .filter(col("realm_id").isNotNull)
@@ -55,7 +43,6 @@ object SessionDuration extends Main {
         col("country"),
         col("town")
       )
-      .union(previousSessions)
       .groupBy(
         col("realm_id"),
         col("session_id"), // TODO: Consider removing
@@ -84,7 +71,6 @@ object SessionDuration extends Main {
         col("country"),
         col("town")
       )
-      .union(previousSessions)
       .groupBy(
         col("realm_id"),
         col("session_id"), // TODO: Consider removing
