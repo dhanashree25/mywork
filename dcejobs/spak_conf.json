@@ -1,0 +1,9 @@
+[
+  {
+    "Classification": "spark",
+    "Properties": {
+      "maximizeResourceAllocation": "true",
+      "spark.hadoop.fs.s3n.awsAccessKeyId": {{ key "dce-spark-jobs/config/aws/access_key" }}"
+    }
+  }
+]

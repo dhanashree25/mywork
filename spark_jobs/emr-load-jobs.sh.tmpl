@@ -1,0 +1,28 @@
+#!/bin/sh
+
+set -u -x
+
+BUCKET=${STACK_NAME}-${PLATFORM}-spark-emr
+CLUSTER=${STACK_NAME}-${PLATFORM}-spark-emr
+CLUSTER_ID=$(aws emr list-clusters --region=eu-west-1 --active | jq '.[][] | select(.Name == "'${CLUSTER}'") | .Id' | tr -d '"')
+
+aws s3 cp --recursive s3://$BUCKET ./jobs
+git clone git@bitbucket.org:saffrondigital/spark_jobs.git repo
+
+rm -rf repo/.git
+CHANGES=$(git diff --no-index --name-only jobs repo | grep -v /dev/null)
+CHANGED_JOBS=$(echo $CHANGES | grep py)
+
+# Copy changed files to the bucket
+for change in ${CHANGES}; do
+    aws s3 cp --acl "authenticated-read" $change s3://${BUCKET}/
+done
+
+{{ range $job := sections }}{{ if $job }}
+# Delete dynamodb table
+aws dynamodb delete-table --table-name {{ section $job "kinesis_appname"}} --region=${AWS_REGION}
+echo ${CHANGED_JOBS} | grep -qw {{ $job }}
+if [ "$?" -eq 0 ]; then
+    aws emr add-steps --region eu-west-1 --cluster-id ${CLUSTER_ID} --steps Type=Spark,Name="{{ $job }}",ActionOnFailure=CONTINUE,Args=[--py-files,{{ section $job "py-files" }},--jars,{{ section $job "jars"}},--packages,{{ section $job "packages" }},--class,{{ section $job "class" }},s3://${BUCKET}/{{ $job }}.py,{{ section $job "params" }}]
+fi
+{{ end }}{{ end }}

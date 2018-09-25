@@ -1,0 +1,59 @@
+[
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_exchange_rates",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "ExchangeRateCSV",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
+        "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
+        "--conf=spark.jdbc.username={{ key "dce-spark-jobs/config/redshift/username" }}",
+        "--conf=spark.jdbc.password={{ key "dce-spark-jobs/config/redshift/password" }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0,com.databricks:spark-redshift_2.11:3.0.0-preview1",
+        "s3://release-dce-spark-jobs/dce_spark_jobs_2.11-var_version.jar",
+        "--url=https://www.ecb.europa.eu/stats/eurofxref/eurofxref.zip",
+        "--date=var_date"
+      ]
+  },
+  {
+    "ActionOnFailure": "CANCEL_AND_WAIT",
+    "Name": "daily_subscription_payment",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "SubscriptionPayment",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
+        "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
+        "--conf=spark.jdbc.username={{ key "dce-spark-jobs/config/redshift/username" }}",
+        "--conf=spark.jdbc.password={{ key "dce-spark-jobs/config/redshift/password" }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0,com.databricks:spark-redshift_2.11:3.0.0-preview1",
+        "s3://release-dce-spark-jobs/dce_spark_jobs_2.11-var_version.jar",
+        "--path",
+        "s3n://dce-spark-data-prod/var_path/*/*"
+      ]
+  },
+  {
+    "ActionOnFailure": "CONTINUE",
+    "Name": "daily_revenue_rollup",
+    "Type": "Spark",
+    "Args":[
+        "--class",
+        "RevenueRollup",
+        "--conf=spark.hadoop.fs.s3n.awsAccessKeyId={{ key "dce-spark-jobs/config/aws/access_key" }}",
+        "--conf=spark.hadoop.fs.s3n.awsSecretAccessKey={{ key "dce-spark-jobs/config/aws/secret_key" }}",
+        "--conf=spark.jdbc.url=jdbc:redshift://{{ key "dce-spark-jobs/config/redshift/host"}}:{{ key "dce-spark-jobs/config/redshift/port" }}/redshift",
+        "--conf=spark.jdbc.username={{ key "dce-spark-jobs/config/redshift/username" }}",
+        "--conf=spark.jdbc.password={{ key "dce-spark-jobs/config/redshift/password" }}",
+        "--repositories=https://s3.amazonaws.com/redshift-maven-repository/release",
+        "--packages=com.amazon.redshift:redshift-jdbc42:1.2.15.1025,org.apache.hadoop:hadoop-aws:2.7.3,com.github.scopt:scopt_2.11:3.7.0,com.databricks:spark-redshift_2.11:3.0.0-preview1",
+        "s3://release-dce-spark-jobs/dce_spark_jobs_2.11-var_version.jar",
+        "--path",
+        "s3n://dce-tracking/prod/var_date/*/*"
+    ]
+  }
+]

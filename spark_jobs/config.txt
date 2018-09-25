@@ -1,0 +1,8 @@
+postgres_url,jdbc:postgresql://quicksight.ctimznjpq2f0.eu-west-1.rds.amazonaws.com:5432/analytics
+postgres_user,saffron
+postgres_password,1nn0v8t3
+postgres_driver,org.postgresql.Driver
+kinesis_app_name,kinesis-read-1
+kinesis_stream_name,qa-nlapi-kinesis-test
+kinesis_endpoint_url,https://kinesis.eu-west-1.amazonaws.com
+kinesis_region_name,eu-west-1
